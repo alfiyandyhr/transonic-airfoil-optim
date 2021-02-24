@@ -1,0 +1,52 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                                                                              %
+% Neural-Network-based Surrogate Optimization of a Transonic Airfoil           %
+% Author: Alfiyandy Hariansyah                                                 %
+% Institution: Institute of Fluid Science, Tohoku University                   %
+% Date: 2/4/2021                                                               %
+% CFD Solver: SU2                                                              %
+% Mesh software: Pointwise                                                     %
+% Deep Learning Framework: PyTorch, Scikit-Learn                               %
+% Language: Python                                                             %
+%                                                                              %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%-------------------------- DESIGN OF EXPERIMENT ------------------------------%
+%
+% Initial sampling using Latin Hypercube Sampling
+NUMBER_OF_INITIAL_DESIGNS = 50
+NUMBER_OF_ACTIVE_CONTROL_POINTS = 28
+PERTURBATION = 0.02
+%
+% BSpline components
+BSPLINE_DEGREE = 3
+%
+%------------------------- MESH CONFIGURATION (POINTWISE) ---------------------%
+%
+% Dimension of the airfoil connector
+AIRFOIL_DIM = 350
+%
+% Dimension of the farfield connector
+FARFIELD_DIM = 50
+%
+% The distance from origin to the farfield
+FARFIELD_DIST = 50
+%
+% Leading edge and trailing edge spacing
+LE_SPACING = 0.005
+TE_SPACING = 0.005
+%
+% Size Field Decay (between 0 and 1)
+SIZE_FIELD_DECAY = 0.97
+%
+% Mesh type (UNSTRUCTURED, STRUCTURED)
+MESH_TYPE = UNSTRUCTURED
+%
+% For unstructured (DELAUNAY, ADVANCING_FRONT, ADVANCING_FRONT_ORTHO)
+ALGORITHM = DELAUNAY
+%
+% Solver (SU2, CGNS)
+SOLVER = SU2
+%
+% Dimension
+DIMENSION = 2
