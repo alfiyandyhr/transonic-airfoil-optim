@@ -71,24 +71,33 @@ class AirfoilDesign:
 		delta_y = perturbation
 		
 		sm = sampling_matrix
+
+		#The upper part of the airfoil
 		for i in range(self.design_number):
 			for j in range(int((self.control_points/2))+2):
 				if j != 0 and j != int((self.control_points/2))+1:
-					if 0 < j < 4:
+					#Leading edge
+					if 0 < j < 3:
 						self.y_upper[i,j] = round((self.control_upper[j,1]-delta_y/10)+sm[i,j-1]*2*(delta_y/10),6)
-					elif 3 < j < 11:
+					#Middle
+					elif 2 < j < 12:
 						self.y_upper[i,j] = round((self.control_upper[j,1]-delta_y)+sm[i,j-1]*2*(delta_y),6)
-					elif j > 10:
+					#Trailing edge
+					elif j > 11:
 						self.y_upper[i,j] = round((self.control_upper[j,1]-delta_y/10)+sm[i,j-1]*2*(delta_y/10),6)
-
+		
+		#The lower part of the airfoil
 		for i in range(self.design_number):
 			for j in range(int((self.control_points)/2)+2):
 				if j != 0 and j != int((self.control_points/2))+1:
-					if 0 < j < 5:
+					#Trailing edge
+					if 0 < j < 4:
 						self.y_lower[i,j] = round((self.control_lower[j,1]-delta_y/10)+sm[i,j+13]*2*(delta_y/10),6)
-					elif 4 < j < 12:
+					#Middle
+					elif 3 < j < 13:
 						self.y_lower[i,j] = round((self.control_lower[j,1]-delta_y)+sm[i,j+13]*2*(delta_y),6)
-					elif j > 11:
+					#Leading edge
+					elif j > 12:
 						self.y_lower[i,j] = round((self.control_lower[j,1]-delta_y/10)+sm[i,j+13]*2*(delta_y/10),6)
 
 	def save_random(self):

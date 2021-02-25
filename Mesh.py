@@ -19,8 +19,8 @@ class AirfoilMesh():
 				 mesh_type):
 
 		"""It contains parameters to be used"""
-		file_in = 'D:/my_project/nn_surrogate/Designs/initial_samples/bspline_points/' + file_in
-		file_out = 'D:/my_project/nn_surrogate/Grid_Convergence_Study/random_design1/' + file_out
+		file_in = 'D:/my_project/transonic-airfoil-optim/Designs/initial_samples/bspline_points/' + file_in
+		file_out = 'D:/my_project/transonic-airfoil-optim/Meshes/gen_1/' + file_out
 
 		self.file_in = file_in
 		self.file_out = file_out

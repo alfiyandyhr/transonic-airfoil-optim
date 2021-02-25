@@ -25,3 +25,18 @@ def calc_area(array):
 		area += 0.5 * (array[i+1,0]-array[i,0]) * min(h1,h2)
 
 	return area
+
+def calc_y_diff(array):
+	"""
+	This function calculates the difference of y coordinates,
+	between each point in the upper and lower coordinates
+	Input:
+		array of y coordinates (flattened)
+	Output:
+		the array of y_diffs
+	"""
+	y_diffs = []
+	for i in range(int(len(array)/2)):
+		y_diffs.append(array[i]-array[len(array)-1-i])
+
+	return(np.array(y_diffs).reshape(int(len(array)/2),1))

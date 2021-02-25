@@ -3,12 +3,12 @@ import pandas as pd
 
 def scrap_initial_training_data():
 	"""Scraping the data of interest from CFD simulation results as objective functions"""
-	data_interest_obj = [] #for objective functions
+	data_interest_obj = np.zeros((50,3)) #for objective functions
 	for i in range(50):
-		data = pd.read_csv('Meshes/random_design'+str(i)+'/history.csv',
-			header=0, usecols=['      "CEff"      '])
-		interest = np.array([data.iloc[len(data)-1,0]])
-		data_interest_obj = np.append(data_interest_obj, interest)
+		data = pd.read_csv('Meshes/gen_1/random_design'+str(i)+'/history.csv',
+			header=0, usecols=['       "CD"       ','       "CL"       ','       "CMz"      '])
+		interest = np.array([data.iloc[len(data)-1]])
+		data_interest_obj[i] = interest 
 
 	"""Scraping the data of interest from random designs as design variables"""
 	data_interest_dv = np.zeros((1,28)) #for design variables
@@ -29,10 +29,10 @@ def scrap_initial_training_data():
 	np.savetxt('Data/Training/X.dat',
 				data_interest_dv,
 	 			delimiter=' ',
-	 			header=None,
+	 			header='',
 	 			footer='')
 	np.savetxt('Data/Training/OUT.dat',
 				data_interest_obj,
 	 			delimiter=' ',
-	 			header=None,
+	 			header='',
 	 			footer='')
