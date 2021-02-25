@@ -1,3 +1,4 @@
+
 #Sampling
 #Coded by Alfiyandy Hariansyah
 #Tohoku University
