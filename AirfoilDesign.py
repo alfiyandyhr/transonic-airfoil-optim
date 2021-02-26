@@ -1,7 +1,7 @@
 #AirfoilDesign class: import_baseline, create_random, save_random
 #Coded by Alfiyandy Hariansyah
 #Tohoku University
-#2/24/2021
+#2/26/2021
 #####################################################################################################
 import numpy as np
 import pandas as pd
@@ -52,13 +52,13 @@ class AirfoilDesign:
 					baseline_control_path,
 					usecols = (0,1),
 					skip_header = 1,
-					skip_footer = 17,
+					skip_footer = int(self.control_points/2)+3,
 					delimiter = " ")
 
 		self.control_lower = np.genfromtxt(
 					baseline_control_path,
 					usecols = (0,1),
-					skip_header = 18,
+					skip_header = int(self.control_points/2)+4,
 					skip_footer = 0,
 					delimiter = " ")
 
@@ -76,29 +76,34 @@ class AirfoilDesign:
 		for i in range(self.design_number):
 			for j in range(int((self.control_points/2))+2):
 				if j != 0 and j != int((self.control_points/2))+1:
-					#Leading edge
-					if 0 < j < 3:
-						self.y_upper[i,j] = round((self.control_upper[j,1]-delta_y/10)+sm[i,j-1]*2*(delta_y/10),6)
-					#Middle
-					elif 2 < j < 12:
+					#The leading edge
+					if j == 1:
+						self.y_upper[i,j] = round((self.control_upper[j,1]-delta_y/2)+sm[i,j-1]*2*(delta_y/2),6)
+					#The middle section
+					elif 1 < j < 12:
 						self.y_upper[i,j] = round((self.control_upper[j,1]-delta_y)+sm[i,j-1]*2*(delta_y),6)
-					#Trailing edge
-					elif j > 11:
+					#The trailing edge
+					elif j == 12:
+						self.y_upper[i,j] = round((self.control_upper[j,1]-delta_y/2)+sm[i,j-1]*2*(delta_y/2),6)
+					elif j == 13:
 						self.y_upper[i,j] = round((self.control_upper[j,1]-delta_y/10)+sm[i,j-1]*2*(delta_y/10),6)
 		
 		#The lower part of the airfoil
 		for i in range(self.design_number):
 			for j in range(int((self.control_points)/2)+2):
 				if j != 0 and j != int((self.control_points/2))+1:
-					#Trailing edge
-					if 0 < j < 4:
-						self.y_lower[i,j] = round((self.control_lower[j,1]-delta_y/10)+sm[i,j+13]*2*(delta_y/10),6)
-					#Middle
-					elif 3 < j < 13:
-						self.y_lower[i,j] = round((self.control_lower[j,1]-delta_y)+sm[i,j+13]*2*(delta_y),6)
-					#Leading edge
-					elif j > 12:
-						self.y_lower[i,j] = round((self.control_lower[j,1]-delta_y/10)+sm[i,j+13]*2*(delta_y/10),6)
+					#The trailing edge
+					if j == 1:
+						self.y_lower[i,j] = round((self.control_lower[j,1]-delta_y/10)+sm[i,j+12]*2*(delta_y/10),6)
+					elif j == 2:
+						self.y_lower[i,j] = round((self.control_lower[j,1]-delta_y/2)+sm[i,j+12]*2*(delta_y/2),6)
+					#The middle section
+					elif 2 < j < 13:
+						self.y_lower[i,j] = round((self.control_lower[j,1]-delta_y)+sm[i,j+12]*2*(delta_y),6)
+					#The leading edge
+					elif j == 13:
+						self.y_lower[i,j] = round((self.control_lower[j,1]-delta_y/2)+sm[i,j+12]*2*(delta_y/2),6)
+
 
 	def save_random(self):
 		"""Saving random coordinates into .dat files"""
