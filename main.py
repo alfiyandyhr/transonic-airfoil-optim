@@ -1,8 +1,6 @@
-#Generating airfoil designs
-#Outputting 50 random designs with 30 design variables using Latin Hypercube Sampling
 #Coded by Alfiyandy Hariansyah
 #Tohoku University
-#2/24/2021
+#2/26/2021
 #####################################################################################################
 from LoadVars import *
 from AirfoilDesign import *
@@ -41,14 +39,24 @@ bspline.to_pointwise_format()
 #Matplotlib
 plt.plot(design.uiuc_data_upper[:,0], design.uiuc_data_upper[:,1], 'b-', markersize = 3, label='RAE2282 - Baseline')
 plt.plot(design.uiuc_data_lower[:,0], design.uiuc_data_lower[:,1], 'b-', markersize = 3)
-plt.plot(design.control_upper[:,0], design.control_upper[:,1], 'go', markersize = 3, label='RAE2282 - B Spline Control Points')
-plt.plot(design.control_lower[:,0], design.control_lower[:,1], 'go', markersize = 3)
+d1 = [0.0,0.01,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.01,0.002,0.0]
+d2 = [0.0,0.002,0.01,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.01,0.0]
+plt.errorbar(design.control_upper[:,0], design.control_upper[:,1],yerr=d1,fmt='ro',markersize=3,ecolor='black',capsize=3, label='Control points')
+plt.errorbar(design.control_lower[:,0], design.control_lower[:,1],yerr=d2,fmt='ro',markersize=3,ecolor='black',capsize=3)
+plt.plot(design.control_upper[:,0], design.control_upper[:,1], 'bo', markersize = 2)
+plt.plot(design.control_lower[:,0], design.control_lower[:,1], 'bo', markersize = 2)
 plt.plot(bspline.bspline_points[:,0],bspline.bspline_points[:,1],'r-',markersize = 3, label='B Spline')
-plt.plot(design.x_upper, design.y_upper[49], 'ro', markersize = 3, label='Random Control Points')
-plt.plot(design.x_lower, design.y_lower[49], 'ro', markersize = 3)
+plt.plot(design.x_upper, design.y_upper[99], 'ro', markersize = 3, label='Random Control Points')
+plt.plot(design.x_lower, design.y_lower[99], 'ro', markersize = 3)
 plt.xlim([-0.2, 1.2])
+plt.xlim([-0.0025, 0.01])
+plt.xlim([0.8, 1.01])
+plt.xlim([0.95, 1.01])
+plt.ylim([-0.02, 0.02])
+plt.ylim([-0.04, 0.06])
+plt.ylim([-0.05, 0.05])
 plt.ylim([-0.2, 0.2])
-plt.title('Airfoils')
+plt.title('Airfoil')
 plt.xlabel("x")
 plt.ylabel("y")
 plt.legend(loc="upper right")
@@ -70,35 +78,39 @@ for i in range(design_number):
 Initialization
 """
 parent_pop = np.concatenate((design.y_upper,design.y_lower),axis=1)
-parent_pop = np.delete(parent_pop,(0,15,16,31),axis=1)
+parent_pop = np.delete(parent_pop,(0,int(control_points/2)+1,int(control_points/2)+2,control_points+3),axis=1)
 
-#Area calculation
+#Minimum area constraint
 ref_control = np.concatenate((design.control_upper, design.control_lower),axis=0)
 ref_area = calc_area(ref_control)
 
 airfoil_area = []
-x_control = np.concatenate((design.x_upper,design.x_lower),axis=0).reshape((32,1))
+x_control = np.concatenate((design.x_upper,design.x_lower),axis=0).reshape((control_points+4,1))
 for i in range(design_number):
-	y_control = np.concatenate((design.y_upper[i],design.y_lower[i]),axis=0).reshape((32,1))
+	y_control = np.concatenate((design.y_upper[i],design.y_lower[i]),axis=0).reshape((control_points+4,1))
 	xy_control = np.concatenate((x_control,y_control),axis=1)
 	airfoil_area.append(calc_area(xy_control))
 airfoil_area = np.array(airfoil_area).reshape(design_number,1)
 
-parent_pop_eval = -(airfoil_area - ref_area)
+parent_pop_eval = -(0.8*airfoil_area - ref_area)
 
+#Leading and trailing edge constraints
 array = np.concatenate((design.control_upper[:,1],design.control_lower[:,1]))
 y_diff_ref = calc_y_diff(array)
 y_diff_ref = np.delete(y_diff_ref, (0,int(control_points/2)+1), axis=0)
 
 y_diffs = np.zeros((design_number,int(control_points/2)+2))
 for i in range(design_number):
-	y_control = np.concatenate((design.y_upper[i],design.y_lower[i])).reshape((32,1))
+	y_control = np.concatenate((design.y_upper[i],design.y_lower[i])).reshape((control_points+4,1))
 	y_diff = calc_y_diff(y_control).reshape(-1)
 	y_diffs[i,:] = y_diff
-y_diffs = np.delete(y_diffs, (0,int(control_points/2)+1), axis=1)
+y_diffs = y_diffs[:,[1,int(control_points/2)-1,int(control_points/2)-2]]
 
 parent_pop_eval = np.concatenate((parent_pop_eval,y_diffs),axis=1)
-parent_pop_eval = np.concatenate((np.zeros((50,3)),parent_pop_eval),axis=1)
+parent_pop_eval = np.concatenate((np.zeros((design_number,3)),parent_pop_eval),axis=1)
+
+print(parent_pop.shape)
+print(parent_pop_eval)
 #####################################################################################################
 #Meshing the baseline
 airfoil_mesh_baseline = AirfoilMesh(
@@ -158,7 +170,7 @@ for i in range(design_number):
 
 print(parent_pop_eval[:,0])
 #####################################################################################################
-CFD Simulations
+# CFD Simulations
 su2_cfd(dir='Grid_Convergence_Study/baseline', paralel_comp=True, core=4)
 
 for i in range(50):
