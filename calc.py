@@ -13,16 +13,21 @@ def calc_area(array):
 	"""
 	area = 0.0
 	#Calculate the upper triangles
-	for i in range(int(len(array)/2)-1):
-		h1 = array[i,1] - array[len(array)-1-(i+1),1]
-		h2 = array[i+1,1] - array[len(array)-1-(i+1),1]
+	for i in range(int((len(array)+1)/2)-1):
+		h1 = array[i,1] - array[len(array)-(i+1),1]
+		h2 = array[i+1,1] - array[len(array)-(i+1),1]
 		area += 0.5 * (array[i+1,0]-array[i,0]) * max(h1,h2)
 
 	#Calculate the lower triangles
-	for i in range(int(len(array)/2),len(array)-1):
-		h1 = array[i,1] - array[len(array)-1-(i+1),1]
-		h2 = array[i+1,1] - array[len(array)-1-(i+1),1]
-		area += 0.5 * (array[i+1,0]-array[i,0]) * min(h1,h2)
+	for i in range(int((len(array)+1)/2),len(array)):
+		if i == len(array)-1:
+			h1 = array[i,1] - array[0,1]
+			h2 = array[0,1] - array[0,1]
+			area += 0.5 * (array[0,0]-array[i,0]) * min(h1,h2)
+		else:
+			h1 = array[i,1] - array[len(array)-(i+1),1]
+			h2 = array[i+1,1] - array[len(array)-(i+1),1]
+			area += 0.5 * (array[i+1,0]-array[i,0]) * min(h1,h2)
 
 	return area
 
@@ -36,7 +41,10 @@ def calc_y_diff(array):
 		the array of y_diffs
 	"""
 	y_diffs = []
-	for i in range(int(len(array)/2)):
-		y_diffs.append(array[i]-array[len(array)-1-i])
+	for i in range(int((len(array)+1)/2)):
+		if i==0:
+			y_diffs.append(0.0)
+		else:
+			y_diffs.append(array[i]-array[len(array)-i])
 
-	return(np.array(y_diffs).reshape(int(len(array)/2),1))
+	return(np.array(y_diffs).reshape(int((len(array)+1)/2),1))
