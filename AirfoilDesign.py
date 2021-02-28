@@ -1,7 +1,7 @@
 #AirfoilDesign class: import_baseline, create_random, save_random
 #Coded by Alfiyandy Hariansyah
 #Tohoku University
-#2/26/2021
+#2/28/2021
 #####################################################################################################
 import numpy as np
 import pandas as pd
@@ -27,7 +27,17 @@ class AirfoilDesign:
 		self.y_upper = np.zeros((design_number,int((control_points/2))+2))
 		
 		self.x_lower = []
-		self.y_lower = np.zeros((design_number,int((control_points/2))+2))
+		self.y_lower = np.zeros((design_number,int((control_points/2))+1))
+
+		self.y_upper_max = []
+		self.y_lower_max = []
+
+		self.y_upper_min = []
+		self.y_lower_min = []
+
+		#The max in min in design space
+		self.control_max = []
+		self.control_min = []
 
 	def import_baseline(self,
 		baseline_path,
@@ -51,15 +61,15 @@ class AirfoilDesign:
 		self.control_upper = np.genfromtxt(
 					baseline_control_path,
 					usecols = (0,1),
-					skip_header = 1,
-					skip_footer = int(self.control_points/2)+3,
+					skip_header = int(self.control_points/2)+1,
+					skip_footer = 0,
 					delimiter = " ")
 
 		self.control_lower = np.genfromtxt(
 					baseline_control_path,
 					usecols = (0,1),
-					skip_header = int(self.control_points/2)+4,
-					skip_footer = 0,
+					skip_header = 0,
+					skip_footer = int(self.control_points/2)+2,
 					delimiter = " ")
 
 	def create_random(self, sampling_matrix, perturbation=0.02):
@@ -90,8 +100,8 @@ class AirfoilDesign:
 		
 		#The lower part of the airfoil
 		for i in range(self.design_number):
-			for j in range(int((self.control_points)/2)+2):
-				if j != 0 and j != int((self.control_points/2))+1:
+			for j in range(int((self.control_points)/2)+1):
+				if j != 0:
 					#The trailing edge
 					if j == 1:
 						self.y_lower[i,j] = round((self.control_lower[j,1]-delta_y/10)+sm[i,j+12]*2*(delta_y/10),6)
@@ -104,22 +114,21 @@ class AirfoilDesign:
 					elif j == 13:
 						self.y_lower[i,j] = round((self.control_lower[j,1]-delta_y/2)+sm[i,j+12]*2*(delta_y/2),6)
 
-
 	def save_random(self):
 		"""Saving random coordinates into .dat files"""
 		x_upper_pd = pd.DataFrame(self.x_upper)
 		x_lower_pd = pd.DataFrame(self.x_lower)
 		y_upper_pd = pd.DataFrame(self.y_upper)
 		y_lower_pd = pd.DataFrame(self.y_lower)
-		z_upper_pd = pd.DataFrame(np.zeros((int((self.control_points/2))+2,1)))
-		z_lower_pd = pd.DataFrame(np.zeros((int((self.control_points/2))+2,1)))
+		z_upper_pd = pd.DataFrame(np.zeros((len(self.x_upper),1)))
+		z_lower_pd = pd.DataFrame(np.zeros((len(self.x_lower),1)))
 
 
 		for i in range(self.design_number):
 			random_design_upper = pd.concat([x_upper_pd, y_upper_pd.iloc[i], z_upper_pd], axis=1)
-			random_design_lower = pd.concat([x_lower_pd, y_lower_pd.iloc[i], z_upper_pd], axis=1)
+			random_design_lower = pd.concat([x_lower_pd, y_lower_pd.iloc[i], z_lower_pd], axis=1)
 
-			random_design = pd.concat([random_design_upper, random_design_lower], axis=0)
+			random_design = pd.concat([random_design_lower, random_design_upper], axis=0)
 
 			random_design.to_csv('Designs/initial_samples/control_points/random_design' + str(i) + '.dat',
 						sep=' ',header=False,index=False)

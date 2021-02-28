@@ -3,7 +3,7 @@
 % Neural-Network-based Surrogate Optimization of a Transonic Airfoil           %
 % Author: Alfiyandy Hariansyah                                                 %
 % Institution: Institute of Fluid Science, Tohoku University                   %
-% Date: 2/26/2021                                                               %
+% Date: 2/28/2021                                                               %
 % CFD Solver: SU2                                                              %
 % Mesh software: Pointwise                                                     %
 % Deep Learning Framework: PyTorch, Scikit-Learn                               %
