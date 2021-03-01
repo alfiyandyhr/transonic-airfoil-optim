@@ -1,12 +1,12 @@
 #Coded by Alfiyandy Hariansyah
 #Tohoku University
-#2/28/2021
+#3/1/2021
 #####################################################################################################
 from LoadVars import *
 from AirfoilDesign import *
 from Sampling import *
 from BSpline import * 
-# from Mesh import *
+from Mesh import *
 import matplotlib.pyplot as plt
 
 from SaveOutput import save
@@ -84,7 +84,7 @@ plt.xlim([0.8, 1.01])
 plt.ylim([-0.04, 0.06])
 plt.ylim([-0.05, 0.05])
 plt.ylim([-0.2, 0.2])
-plt.title('Design Space')
+plt.title('Leading edge constraint')
 plt.xlabel("x")
 plt.ylabel("y")
 plt.legend(loc="upper right")
