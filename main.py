@@ -1,6 +1,6 @@
 #Coded by Alfiyandy Hariansyah
 #Tohoku University
-#3/1/2021
+#3/2/2021
 #####################################################################################################
 from LoadVars import *
 from AirfoilDesign import *
@@ -148,12 +148,16 @@ airfoil_mesh_baseline = AirfoilMesh(
 	solver=solver,
 	dim=dimension,
 	mesh_type=mesh_type)
-#airfoil_mesh_baseline.structured(growth_factor=1.2, initial_stepsize=0.001, step=100)
+# airfoil_mesh_baseline.structured(growth_factor=1.2, initial_stepsize=0.001, step=100)
 airfoil_mesh_baseline.unstructured(
 	algorithm,
 	size_field_decay,
 	farfield_radius,
 	farfield_dim)
+airfoil_mesh_baseline.cgrid_structured(
+	farfield_radius,
+	step_dim,
+	first_spacing)
 
 #Meshing first random design
 airfoil_mesh_random_design2 = AirfoilMesh(
