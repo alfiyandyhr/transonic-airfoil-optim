@@ -24,26 +24,32 @@ BSPLINE_DEGREE = 3
 %------------------------- MESH CONFIGURATION (POINTWISE) ---------------------%
 %
 % Dimension of the airfoil connector
-AIRFOIL_DIM = 100
+AIRFOIL_DIM = 221
 %
 % Dimension of the farfield connector
-FARFIELD_DIM = 25
+FARFIELD_DIM = 75
 %
 % The distance from origin to the farfield
 FARFIELD_DIST = 50
 %
+% Dimension of the connector between farfield and airfoil
+STEP_DIM = 100
+%
+% Dimension of the connector between farfield and airfoil
+FIRST_SPACING = 1E-3
+%
 % Leading edge and trailing edge spacing
-LE_SPACING = 0.005
-TE_SPACING = 0.005
+LE_SPACING = 0.001
+TE_SPACING = 0.01
 %
 % Size Field Decay (between 0 and 1)
-SIZE_FIELD_DECAY = 0.85
+SIZE_FIELD_DECAY = 0.995
 %
 % Mesh type (UNSTRUCTURED, STRUCTURED)
 MESH_TYPE = UNSTRUCTURED
 %
 % For unstructured (DELAUNAY, ADVANCING_FRONT, ADVANCING_FRONT_ORTHO)
-ALGORITHM = DELAUNAY
+ALGORITHM = ADVANCING_FRONT
 %
 % Solver (SU2, CGNS)
 SOLVER = SU2
