@@ -37,7 +37,7 @@ N_CONSTR = 7
 %------------------------- MESH CONFIGURATION (POINTWISE) ---------------------%
 %
 % Dimension of the airfoil connector
-AIRFOIL_DIM = 300
+AIRFOIL_DIM = 169
 %
 % Dimension of the farfield connector (for unstructured)
 FARFIELD_DIM = 75
@@ -46,10 +46,10 @@ FARFIELD_DIM = 75
 FARFIELD_DIST = 50
 %
 % Dimension of the connector between farfield and airfoil
-STEP_DIM = 90
+STEP_DIM = 65
 %
 % Dimension of the initial step (for c grid)
-FIRST_SPACING = 0.12E-5
+FIRST_SPACING = 0.001
 %
 % Leading edge and trailing edge spacing
 LE_SPACING = 0.001

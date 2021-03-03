@@ -20,7 +20,7 @@ class AirfoilMesh():
 
 		"""It contains parameters to be used"""
 		file_in = 'D:/my_project/transonic-airfoil-optim/Designs/' + file_in
-		file_out = 'D:/my_project/transonic-airfoil-optim/Grid_Convergence_Study/baseline/cgrid/' + file_out
+		file_out = 'D:/my_project/transonic-airfoil-optim/Grid_Convergence_Study/baseline/cgrid-euler/' + file_out
 
 		self.file_in = file_in
 		self.file_out = file_out
