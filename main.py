@@ -6,9 +6,9 @@ from LoadVars import *
 from AirfoilDesign import *
 from Sampling import *
 from BSpline import * 
-# from Mesh import *
-from ga import *
-from lhs import lhs
+from Mesh import *
+# from ga import *
+# from lhs import lhs
 
 import matplotlib.pyplot as plt
 
@@ -153,7 +153,7 @@ parent_pop_eval = np.concatenate((parent_pop_eval,y_diffs),axis=1)
 parent_pop_eval = np.concatenate((np.zeros((pop_size,3)),parent_pop_eval),axis=1)
 
 ####################################################################################################
-Meshing the baseline
+#Meshing the baseline
 airfoil_mesh_baseline = AirfoilMesh(
 	file_in='rae2282_base.dat',
 	file_out='rae2282_base.su2',
