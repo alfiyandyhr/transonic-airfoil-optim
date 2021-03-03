@@ -13,42 +13,55 @@
 %
 %-------------------------- DESIGN OF EXPERIMENT ------------------------------%
 %
-% Initial sampling using Latin Hypercube Sampling
-NUMBER_OF_INITIAL_DESIGNS = 100
+% Initial sampling (real_lhs, real_random, bin_lhs, bin_random)
+SAMPLING_METHOD = real_lhs
+%
+% Setting for population
+POPULATION_SIZE = 100
+%
+%----------------------------- PROBLEM DEFINITION -----------------------------%
+%
+% Airfoil parametrization using BSpline
 NUMBER_OF_ACTIVE_CONTROL_POINTS = 26
 PERTURBATION = 0.02
 %
 % BSpline components
 BSPLINE_DEGREE = 3
 %
+% Number of objectives
+N_OBJ = 1
+%
+% Number of constraints
+N_CONSTR = 7
+%
 %------------------------- MESH CONFIGURATION (POINTWISE) ---------------------%
 %
 % Dimension of the airfoil connector
-AIRFOIL_DIM = 221
+AIRFOIL_DIM = 300
 %
-% Dimension of the farfield connector
+% Dimension of the farfield connector (for unstructured)
 FARFIELD_DIM = 75
 %
 % The distance from origin to the farfield
 FARFIELD_DIST = 50
 %
 % Dimension of the connector between farfield and airfoil
-STEP_DIM = 100
+STEP_DIM = 90
 %
-% Dimension of the connector between farfield and airfoil
-FIRST_SPACING = 1E-3
+% Dimension of the initial step (for c grid)
+FIRST_SPACING = 0.12E-5
 %
 % Leading edge and trailing edge spacing
 LE_SPACING = 0.001
 TE_SPACING = 0.01
 %
-% Size Field Decay (between 0 and 1)
+% Size Field Decay (between 0 and 1) for unstructured grid
 SIZE_FIELD_DECAY = 0.995
 %
 % Mesh type (UNSTRUCTURED, STRUCTURED)
 MESH_TYPE = UNSTRUCTURED
 %
-% For unstructured (DELAUNAY, ADVANCING_FRONT, ADVANCING_FRONT_ORTHO)
+% Algorithm for unstructured (DELAUNAY, ADVANCING_FRONT, ADVANCING_FRONT_ORTHO)
 ALGORITHM = ADVANCING_FRONT
 %
 % Solver (SU2, CGNS)

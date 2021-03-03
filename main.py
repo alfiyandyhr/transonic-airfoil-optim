@@ -1,12 +1,15 @@
 #Coded by Alfiyandy Hariansyah
 #Tohoku University
-#3/2/2021
+#3/3/2021
 #####################################################################################################
 from LoadVars import *
 from AirfoilDesign import *
 from Sampling import *
 from BSpline import * 
-from Mesh import *
+# from Mesh import *
+from ga import *
+from lhs import lhs
+
 import matplotlib.pyplot as plt
 
 from SaveOutput import save
@@ -18,7 +21,7 @@ import os
 import numpy as np
 #####################################################################################################
 #Importing airfoil baseline
-design = AirfoilDesign(design_number=design_number,control_points=control_points)
+design = AirfoilDesign(pop_size,n_var)
 design.import_baseline(
 	baseline_path='Designs/rae2282_base.dat',
 	baseline_control_path='Designs/rae2282_base_control.dat')
@@ -39,6 +42,10 @@ design.control_max[14:29,1] = design.y_upper_max
 design.control_min[0:14,1] = design.y_lower_min
 design.control_min[14:29,1] = design.y_upper_min
 
+#Upper boundary
+xu = np.delete(design.control_max[:,1],(0,int(n_var/2)+1,n_var+2))
+xl = np.delete(design.control_min[:,1],(0,int(n_var/2)+1,n_var+2))
+
 save('Designs/control_max.dat',design.control_max)
 save('Designs/control_min.dat',design.control_min)
 
@@ -50,9 +57,17 @@ bspline.rotate_and_dilate('Designs/bspline_points_min.dat')
 
 bspline_points_max = np.genfromtxt('Designs/bspline_points_max.dat')
 bspline_points_min = np.genfromtxt('Designs/bspline_points_min.dat')
+
+####################################################################################################
+#Problem definition
+problem = TransonicAirfoilOptimization(n_var,
+									   n_obj,
+									   n_constr,
+									   xu, xl)
 ####################################################################################################
 #Creating lhs matrix
-sampling = Sampling(design_variable=control_points,samples=design_number)
+sampling = define_sampling(initial_sampling_method_name)
+sampling = Sampling(design_variable=n_var,samples=pop_size)
 matrix = sampling.make_matrix()
 
 #Creating random airfoil control points coordinates
@@ -61,7 +76,7 @@ design.save_random()
 
 Creating BSpline from random airfoil control points
 bspline = BSplineFromControlPoints(degree=degree)
-for i in range(design_number):
+for i in range(pop_size):
 	bspline.create(ctrlpts_path='Designs/initial_samples/control_points/random_design'+str(i)+'.dat')
 	bspline.rotate_and_dilate(output_path='Designs/initial_samples/bspline_points/bspline_points_random'+str(i)+'.dat')
 	bspline.to_pointwise_format(file_path='Designs/initial_samples/bspline_points/bspline_points_random'+str(i)+'.dat')
@@ -91,54 +106,54 @@ plt.legend(loc="upper right")
 plt.show()
 #####################################################################################################
 #Prepare the folders to save mesh files
-for i in range(design_number):
-	os.makedirs('Meshes/gen_1/random_design' + str(i))
+for i in range(pop_size):
+	os.makedirs('Solutions/gen_1/random_design' + str(i))
 
 #Prepare the SU2 config files for every mesh folders
-with open('Meshes/baseline/inv_transonic_airfoil.cfg', 'r') as f:
+with open('Solutions/baseline/inv_transonic_airfoil.cfg', 'r') as f:
 	su2_cfg = f.read()
 
-for i in range(design_number):
-	with open('Meshes/gen_1/random_design' + str(i) + '/inv_transonic_airfoil.cfg', 'w') as f:
+for i in range(pop_size):
+	with open('Solutions/gen_1/random_design' + str(i) + '/inv_transonic_airfoil.cfg', 'w') as f:
 		f.write(su2_cfg.replace('rae2282_base.su2','random_design' + str(i) + '.su2'))
 #####################################################################################################
 """
 Initialization
 """
 parent_pop = np.concatenate((design.y_upper,design.y_lower),axis=1)
-parent_pop = np.delete(parent_pop,(0,int(control_points/2)+1,control_points+2),axis=1)
+parent_pop = np.delete(parent_pop,(0,int(n_var/2)+1,n_var+2),axis=1)
 
 #Area calculation
 ref_control = np.concatenate((design.control_upper, design.control_lower),axis=0)
 ref_area = calc_area(ref_control)
 
 airfoil_area = []
-x_control = np.concatenate((design.x_upper,design.x_lower),axis=0).reshape((control_points+3,1))
-for i in range(design_number):
-	y_control = np.concatenate((design.y_upper[i],design.y_lower[i]),axis=0).reshape((control_points+3,1))
+x_control = np.concatenate((design.x_upper,design.x_lower),axis=0).reshape((n_var+3,1))
+for i in range(pop_size):
+	y_control = np.concatenate((design.y_upper[i],design.y_lower[i]),axis=0).reshape((n_var+3,1))
 	xy_control = np.concatenate((x_control,y_control),axis=1)
 	airfoil_area.append(calc_area(xy_control))
-airfoil_area = np.array(airfoil_area).reshape(design_number,1)
+airfoil_area = np.array(airfoil_area).reshape(pop_size,1)
 
 parent_pop_eval = -(0.8*airfoil_area - ref_area)
 
 #Leading and trailing edge constraints
 array = np.concatenate((design.control_upper[:,1],design.control_lower[:,1]))
 y_diff_ref = calc_y_diff(array)
-y_diff_ref = np.delete(y_diff_ref, (0,int(control_points/2)+1), axis=0)
+y_diff_ref = np.delete(y_diff_ref, (0,int(n_var/2)+1), axis=0)
 
-y_diffs = np.zeros((design_number,int(control_points/2)+2))
-for i in range(design_number):
-	y_control = np.concatenate((design.y_upper[i],design.y_lower[i])).reshape((control_points+3,1))
+y_diffs = np.zeros((pop_size,int(n_var/2)+2))
+for i in range(pop_size):
+	y_control = np.concatenate((design.y_upper[i],design.y_lower[i])).reshape((n_var+3,1))
 	y_diff = calc_y_diff(y_control).reshape(-1)
 	y_diffs[i,:] = y_diff
-y_diffs = y_diffs[:,[1,int(control_points/2),int(control_points/2)-1,int(control_points/2)-2]]
+y_diffs = y_diffs[:,[1,int(n_var/2),int(n_var/2)-1,int(n_var/2)-2]]
 
 parent_pop_eval = np.concatenate((parent_pop_eval,y_diffs),axis=1)
-parent_pop_eval = np.concatenate((np.zeros((design_number,3)),parent_pop_eval),axis=1)
+parent_pop_eval = np.concatenate((np.zeros((pop_size,3)),parent_pop_eval),axis=1)
 
-#####################################################################################################
-#Meshing the baseline
+####################################################################################################
+Meshing the baseline
 airfoil_mesh_baseline = AirfoilMesh(
 	file_in='rae2282_base.dat',
 	file_out='rae2282_base.su2',
@@ -176,7 +191,7 @@ airfoil_mesh_random_design2.unstructured(
 	farfield_dim)
 
 #Meshing all random designs
-for i in range(design_number):
+for i in range(pop_size):
 	#If the random design doesn't have intersection between curves
 	if all(y_diffs[i]>0):
 		airfoil_mesh_random = AirfoilMesh(
