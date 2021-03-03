@@ -20,10 +20,18 @@ def load_vars():
 config = load_vars()
 
 """Assigning variables"""
-design_number = eval(config['NUMBER_OF_INITIAL_DESIGNS'])
-control_points = eval(config['NUMBER_OF_ACTIVE_CONTROL_POINTS'])
+#Design of Experiment
+initial_sampling_method_name = config['SAMPLING_METHOD']
+pop_size = eval(config['POPULATION_SIZE'])
+
+#Problem Definition
+n_var = eval(config['NUMBER_OF_ACTIVE_CONTROL_POINTS'])
 perturbation = eval(config['PERTURBATION'])
 degree = eval(config['BSPLINE_DEGREE'])
+n_obj = eval(config['N_OBJ'])
+n_constr = eval(config['N_CONSTR'])
+
+#Mesh
 con_dimension = eval(config['AIRFOIL_DIM'])
 farfield_dim = eval(config['FARFIELD_DIM'])
 farfield_radius = eval(config['FARFIELD_DIST'])
@@ -40,3 +48,5 @@ elif algorithm == 'Advancing_Front_Ortho':
 	algorithm = 'AdvancingFrontOrtho'
 solver = config['SOLVER']
 dimension = eval(config['DIMENSION'])
+
+#
