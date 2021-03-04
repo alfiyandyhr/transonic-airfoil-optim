@@ -29,15 +29,15 @@ PERTURBATION = 0.02
 BSPLINE_DEGREE = 3
 %
 % Number of objectives
-N_OBJ = 1
+N_OBJ = 2
 %
 % Number of constraints
-N_CONSTR = 7
+N_CONSTR = 6
 %
 %------------------------- MESH CONFIGURATION (POINTWISE) ---------------------%
 %
 % Dimension of the airfoil connector
-AIRFOIL_DIM = 169
+AIRFOIL_DIM = 50
 %
 % Dimension of the farfield connector (for unstructured)
 FARFIELD_DIM = 75
@@ -46,7 +46,7 @@ FARFIELD_DIM = 75
 FARFIELD_DIST = 50
 %
 % Dimension of the connector between farfield and airfoil
-STEP_DIM = 65
+STEP_DIM = 20
 %
 % Dimension of the initial step (for c grid)
 FIRST_SPACING = 0.001
