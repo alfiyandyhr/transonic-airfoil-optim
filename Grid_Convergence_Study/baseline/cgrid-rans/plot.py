@@ -10,7 +10,9 @@ drag_counts = data[:,0]/0.0001
 
 CL = data[:,1]/0.01
 
-N = data[:,2]
+CM = data[:,2]/0.001
+
+N = data[:,3]
 
 # fig, ax = plt.subplots()
 # ax.plot(N,drag_counts,'-')
@@ -30,19 +32,39 @@ N = data[:,2]
 # plt.grid(b=True)
 # plt.show()
 
+# fig, ax = plt.subplots()
+# ax.plot(N,CL,'-')
+# ax.scatter(N,CL,c='b')
+# ax.annotate('Tiny (87.186)', (N[0]+2000,CL[0]))
+# ax.annotate('Extra Coarse (88.620)', (N[1]+2000,CL[1]-0.05))
+# ax.annotate('Coarse (88.999)', (N[2]+2000,CL[2]-0.1))
+# ax.annotate('Medium (89.227)', (N[3]+2000,CL[3]-0.1))
+# ax.annotate('Fine (89.375)', (N[4]+2000,CL[4]-0.1))
+# ax.annotate('Extra Fine\n(89.503)', (N[5]-7000,CL[5]-0.25))
+# ax.annotate('Super Fine\n(89.532)', (N[6]-11000,CL[6]-0.25))
+# ax.set_ylabel('CL x 100')
+# ax.set_xlabel('Number of grid cells')
+# plt.xlim()
+# plt.title('GCS - Lift')
+# plt.grid(b=True)
+# plt.show()
+
 fig, ax = plt.subplots()
-ax.plot(N,CL,'-')
-ax.scatter(N,CL,c='b')
-ax.annotate('Tiny (87.186)', (N[0]+2000,CL[0]))
-ax.annotate('Extra Coarse (88.620)', (N[1]+2000,CL[1]-0.05))
-ax.annotate('Coarse (88.999)', (N[2]+2000,CL[2]-0.1))
-ax.annotate('Medium (89.227)', (N[3]+2000,CL[3]-0.1))
-ax.annotate('Fine (89.375)', (N[4]+2000,CL[4]-0.1))
-ax.annotate('Extra Fine\n(89.503)', (N[5]-7000,CL[5]-0.25))
-ax.annotate('Super Fine\n(89.532)', (N[6]-11000,CL[6]-0.25))
-ax.set_ylabel('CL x 100')
+ax.plot(N,CM,'-')
+ax.scatter(N,CM,c='b')
+
+ax.annotate('Tiny\n(126.155)', (N[0]+2000,CM[0]-0.01))
+ax.annotate('Extra Coarse\n(127.211)', (N[1]+2000,CM[1]-0.1))
+ax.annotate('Coarse\n(126.799)', (N[2]+2000,CM[2]))
+ax.annotate('Medium\n(126.576)', (N[3]+2000,CM[3]+0.02))
+ax.annotate('Fine\n(126.549)', (N[4]+2000,CM[4]-0.09))
+ax.annotate('Extra Fine\n(126.589)', (N[5]-12000,CM[5]+0.03))
+ax.annotate('Super Fine\n(126.556)', (N[6]-11000,CM[6]+0.03))
+
+ax.set_ylabel('CM x 1000')
 ax.set_xlabel('Number of grid cells')
 plt.xlim()
-plt.title('GCS - Lift')
+# plt.ylim([124.85, 125.9])
+plt.title('GCS - Moment')
 plt.grid(b=True)
 plt.show()
