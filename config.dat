@@ -17,7 +17,7 @@
 SAMPLING_METHOD = real_lhs
 %
 % Setting for population
-POPULATION_SIZE = 100
+POPULATION_SIZE = 101
 %
 %----------------------------- PROBLEM DEFINITION -----------------------------%
 %
@@ -36,17 +36,20 @@ N_CONSTR = 6
 %
 %------------------------- MESH CONFIGURATION (POINTWISE) ---------------------%
 %
+% Pointwise port
+PW_PORT = 2807
+%
 % Dimension of the airfoil connector
-AIRFOIL_DIM = 50
+AIRFOIL_DIM = 1600
 %
 % Dimension of the farfield connector (for unstructured)
-FARFIELD_DIM = 75
+FARFIELD_DIM = 100
 %
 % The distance from origin to the farfield
 FARFIELD_DIST = 50
 %
 % Dimension of the connector between farfield and airfoil
-STEP_DIM = 20
+STEP_DIM = 65
 %
 % Dimension of the initial step (for c grid)
 FIRST_SPACING = 0.001
@@ -56,13 +59,13 @@ LE_SPACING = 0.001
 TE_SPACING = 0.01
 %
 % Size Field Decay (between 0 and 1) for unstructured grid
-SIZE_FIELD_DECAY = 0.995
+SIZE_FIELD_DECAY = 0.99
 %
 % Mesh type (UNSTRUCTURED, STRUCTURED)
 MESH_TYPE = UNSTRUCTURED
 %
 % Algorithm for unstructured (DELAUNAY, ADVANCING_FRONT, ADVANCING_FRONT_ORTHO)
-ALGORITHM = ADVANCING_FRONT
+ALGORITHM = DELAUNAY
 %
 % Solver (SU2, CGNS)
 SOLVER = SU2

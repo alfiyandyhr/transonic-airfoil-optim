@@ -14,6 +14,8 @@ from pymoo.optimize import minimize
 from pymoo.factory import get_problem, get_sampling, get_selection
 from pymoo.factory import get_crossover, get_mutation, get_termination
 
+from eval import evaluate_aero,evaluate_area,evaluate_y_diff
+# from Mesh import *
 from NeuralNet import calculate
 #####################################################################################################
 #Disable warning
@@ -38,6 +40,16 @@ class TransonicAirfoilOptimization(Problem):
 						 n_obj=self.n_obj,
 						 n_constr=self.n_constr,
 						 xl=self.xl, xu=self.xu)
+
+	# def _evaluate(self, X, out, *args, **kwargs):
+	# 	"""Evaluation method"""
+		
+	# 	F = OUT[:, 0:self.n_obj]
+	# 	G = OUT[:, self.n_obj:(self.n_obj+self.n_constr)]
+
+	# 	out["F"] = np.column_stack([F])
+	# 	out["G"] = np.column_stack([G])
+
 	
 class EvolutionaryAlgorithm():
 	"""Instance for the crossover operator"""

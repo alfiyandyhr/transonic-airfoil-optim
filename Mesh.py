@@ -3,11 +3,12 @@
 #Tohoku University
 #3/2/2021
 #####################################################################################################
+from LoadVars import pw_port
 from pointwise import GlyphClient
 from pointwise.glyphapi import *
 
 #Establishing a pointwise environment
-glf = GlyphClient(port=2807)
+glf = GlyphClient(port=pw_port)
 pw = glf.get_glyphapi()
 
 class AirfoilMesh():
@@ -19,8 +20,10 @@ class AirfoilMesh():
 				 mesh_type):
 
 		"""It contains parameters to be used"""
-		file_in = 'D:/my_project/transonic-airfoil-optim/Designs/' + file_in
-		file_out = 'D:/my_project/transonic-airfoil-optim/Grid_Convergence_Study/baseline/cgrid-euler/' + file_out
+		# file_in = 'D:/my_project/transonic-airfoil-optim/Designs/gen_' + file_in
+		# file_out = 'D:/my_project/transonic-airfoil-optim/Solutions/gen_' + file_out
+		file_in = 'D:/my_project/transonic-airfoil-optim/Designs/baseline/' + file_in
+		file_out = 'D:/my_project/transonic-airfoil-optim/Grid_Convergence_Study/baseline/ogrid-euler/' + file_out
 
 		self.file_in = file_in
 		self.file_out = file_out
@@ -64,6 +67,7 @@ class AirfoilMesh():
 
 	def create_airfoil_connectors(self):
 		"""Creating connectors"""
+		pw.Connector.setCalculateDimensionMaximum(2000)
 		pw.Connector.setDefault('Dimension',self.con_dimension)
 		self.curves = pw.Database.getAll()
 		self.connectors = pw.Connector.createOnDatabase(self.curves,
@@ -213,8 +217,12 @@ class AirfoilMesh():
 			edge_3 = pw.Edge.create()
 			edge_3.addConnector(con7)
 			edge_4 = pw.Edge.create()
-			edge_4.addConnector(con2)
 			edge_4.addConnector(con1)
+			edge_4.addConnector(con2)
+
+			#for baseline (switch!)
+			# edge_4.addConnector(con2)
+			# edge_4.addConnector(con1)
 
 			dom = pw.DomainStructured.create()
 			dom.addEdge(edge_1)
@@ -344,7 +352,3 @@ class AirfoilMesh():
 
 		#Exporting the mesh files
 		self.pw_export([dom_1])
-
-
-
-

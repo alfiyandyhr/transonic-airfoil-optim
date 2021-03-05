@@ -1,7 +1,7 @@
 #Generating BSpline using geomdl
 #Coded by Alfiyandy Hariansyah
 #Tohoku University
-#2/28/2021
+#3/5/2021
 #####################################################################################################
 import numpy as np
 import pandas as pd
@@ -67,7 +67,7 @@ class BSplineFromControlPoints():
 			original_content_upper[0] = str(1.0) + ' ' + str(0.0) + ' ' + str(0.0) + '\n'
 			original_content_upper[-1] = str(0.0) + ' ' + str(0.0) + ' ' + str(0.0) + '\n'
 			original_content_lower[0] = str(0.0) + ' ' + str(0.0) + ' ' + str(0.0) + '\n'
-			original_content_lower[0] = str(1.0) + ' ' + str(0.0) + ' ' + str(0.0) + '\n'
+			original_content_lower[-1] = str(1.0) + ' ' + str(0.0) + ' ' + str(0.0) + '\n'
 		with open(file_path, 'w') as file_out:
 			file_out.seek(0)
 			file_out.write(str(int(len(self.bspline_points)/2)) + '\n')
