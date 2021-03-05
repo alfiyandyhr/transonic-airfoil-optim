@@ -2,11 +2,14 @@
 #Outputting variables as python variables loaded in main.py
 #Coded by Alfiyandy Hariansyah
 #Tohoku University
-#2/4/2021
+#3/5/2021
 #####################################################################################################
+import numpy as np
+from BSpline import BSplineFromControlPoints
 
+# -------------------- Parameters Loader ---------------------#
 def load_vars():
-	"""Loading all varibales and storing them in a dictionary"""
+	"""Loading all variables and storing them in a dictionary"""
 	with open('config.dat') as f:
 		content = f.readlines()
 		config = {}
@@ -32,6 +35,7 @@ n_obj = eval(config['N_OBJ'])
 n_constr = eval(config['N_CONSTR'])
 
 #Mesh
+pw_port = eval(config['PW_PORT'])
 con_dimension = eval(config['AIRFOIL_DIM'])
 farfield_dim = eval(config['FARFIELD_DIM'])
 farfield_radius = eval(config['FARFIELD_DIST'])
@@ -49,4 +53,75 @@ elif algorithm == 'Advancing_Front_Ortho':
 solver = config['SOLVER']
 dimension = eval(config['DIMENSION'])
 
-#
+# -------------------- Baseline Parameters ---------------------#
+
+#Reference area calculation
+def evaluate_area(array):
+	"""
+	This function calculates the area of airfoil,
+	by summing all the discrete triangles
+	Input:
+		array of coordinates (x and y)
+	Output:
+		the area (double)
+	"""
+	area = 0.0
+	#Calculate the upper triangles
+	for i in range(int((len(array)+1)/2)-1):
+		h1 = array[i,1] - array[len(array)-(i+1),1]
+		h2 = array[i+1,1] - array[len(array)-(i+1),1]
+		area += 0.5 * (array[i+1,0]-array[i,0]) * max(h1,h2)
+
+	#Calculate the lower triangles
+	for i in range(int((len(array)+1)/2),len(array)):
+		if i == len(array)-1:
+			h1 = array[i,1] - array[0,1]
+			h2 = array[0,1] - array[0,1]
+			area += 0.5 * (array[0,0]-array[i,0]) * min(h1,h2)
+		else:
+			h1 = array[i,1] - array[len(array)-(i+1),1]
+			h2 = array[i+1,1] - array[len(array)-(i+1),1]
+			area += 0.5 * (array[i+1,0]-array[i,0]) * min(h1,h2)
+
+	return area
+
+control_upper = np.genfromtxt('Designs/baseline/rae2282_base_control.dat',
+							   usecols=(0,1),
+							   skip_header=int(n_var/2)+1)
+control_lower = np.genfromtxt('Designs/baseline/rae2282_base_control.dat',
+							   usecols=(0,1),
+							   skip_footer=int(n_var/2)+2)
+
+# ref_control = np.concatenate((control_upper, control_lower))
+# ref_area = evaluate_area(ref_control)
+ref_area = 0.0812352023725
+
+control_x = np.genfromtxt('Designs/baseline/rae2282_base_control.dat',usecols=0).reshape((n_var+3,1))
+
+# #Design space
+# d1 = [0.0,0.01,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.01,0.002,0.0]
+# d2 = [0.0,0.002,0.01,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.01]
+
+# y_upper_max = control_upper[:,1] + np.array(d1) 
+# y_lower_max = control_lower[:,1] - np.array(d2)
+# y_upper_min = control_upper[:,1] - np.array(d1) 
+# y_lower_min = control_lower[:,1] + np.array(d2)
+
+# control_max = np.concatenate((control_lower,control_upper),axis=0)
+# control_min = np.concatenate((control_lower,control_upper),axis=0)
+# control_max[0:14,1] = y_lower_max
+# control_max[14:29,1] = y_upper_max
+# control_min[0:14,1] = y_lower_min
+# control_min[14:29,1] = y_upper_min
+
+# np.savetxt('Designs/baseline/control_max.dat',control_max)
+# np.savetxt('Designs/baseline/control_min.dat',control_min)
+
+# bspline = BSplineFromControlPoints(degree=degree)
+# bspline.create('Designs/baseline/control_max.dat')
+# bspline.rotate_and_dilate('Designs/baseline/bspline_points_max.dat')
+# bspline.create('Designs/baseline/control_min.dat')
+# bspline.rotate_and_dilate('Designs/baseline/bspline_points_min.dat')
+
+# bspline_points_max = np.genfromtxt('Designs/baseline/bspline_points_max.dat')
+# bspline_points_min = np.genfromtxt('Designs/baseline/bspline_points_min.dat')
