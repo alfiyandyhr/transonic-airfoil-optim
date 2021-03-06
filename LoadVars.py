@@ -24,7 +24,6 @@ config = load_vars()
 
 """Assigning variables"""
 #Design of Experiment
-initial_sampling_method_name = config['SAMPLING_METHOD']
 pop_size = eval(config['POPULATION_SIZE'])
 
 #Problem Definition
@@ -36,6 +35,7 @@ n_constr = eval(config['N_CONSTR'])
 
 #Mesh
 pw_port = eval(config['PW_PORT'])
+mesh_type = config['MESH_TYPE']
 con_dimension = eval(config['AIRFOIL_DIM'])
 farfield_dim = eval(config['FARFIELD_DIM'])
 farfield_radius = eval(config['FARFIELD_DIST'])
@@ -44,7 +44,6 @@ first_spacing = eval(config['FIRST_SPACING'])
 size_field_decay = eval(config['SIZE_FIELD_DECAY'])
 le_spacing = eval(config['LE_SPACING'])
 te_spacing = eval(config['TE_SPACING'])
-mesh_type = config['MESH_TYPE']
 algorithm = config['ALGORITHM'].title()
 if algorithm == 'Advancing_Front':
 	algorithm = 'AdvancingFront'
@@ -52,6 +51,26 @@ elif algorithm == 'Advancing_Front_Ortho':
 	algorithm = 'AdvancingFrontOrtho'
 solver = config['SOLVER']
 dimension = eval(config['DIMENSION'])
+
+#Neural Network configuration
+N_Epoch = eval(config['N_EPOCH'])
+N_Neuron = eval(config['N_NEURON'])
+lr = eval(config['LEARNING_RATE'])
+train_ratio = eval(config['TRAIN_RATIO'])
+batchrate = eval(config['BATCHRATE'])
+number_of_updates = eval(config['NO_OF_UPDATES'])
+
+#Optimization configuration on the trained NN model
+algorithm_name = config['OPTIMIZATION_ALGORITHM']
+initial_sampling_method_name = config['SAMPLING_METHOD']
+selection_operator_name = config['SELECTION_OPERATOR']
+crossover_operator_name = config['CROSSOVER_OPERATOR']
+prob_c = eval(config['CROSSOVER_PROBABILITY'])
+eta_c = eval(config['ETA_CROSSOVER'])
+mutation_operator_name = config['MUTATION_OPERATOR']
+eta_m = eval(config['ETA_MUTATION'])
+termination_name = config['TERMINATION']
+n_gen = eval(config['NUMBER_OF_GENERATION'])
 
 # -------------------- Baseline Parameters ---------------------#
 

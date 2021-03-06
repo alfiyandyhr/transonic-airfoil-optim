@@ -3,18 +3,15 @@
 % Neural-Network-based Surrogate Optimization of a Transonic Airfoil           %
 % Author: Alfiyandy Hariansyah                                                 %
 % Institution: Institute of Fluid Science, Tohoku University                   %
-% Date: 2/28/2021                                                               %
+% Date: 3/6/2021                                                               %
 % CFD Solver: SU2                                                              %
 % Mesh software: Pointwise                                                     %
-% Deep Learning Framework: PyTorch, Scikit-Learn                               %
-% Language: Python                                                             %
+% Deep Learning Framework: PyTorch                                             %
+% Language: Python,C                                                           %
 %                                                                              %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 %-------------------------- DESIGN OF EXPERIMENT ------------------------------%
-%
-% Initial sampling (real_lhs, real_random, bin_lhs, bin_random)
-SAMPLING_METHOD = real_lhs
 %
 % Setting for population
 POPULATION_SIZE = 101
@@ -39,6 +36,9 @@ N_CONSTR = 6
 % Pointwise port
 PW_PORT = 2807
 %
+% Mesh type (OGRID_STRUCTURED, OGRID_UNSTRUCTURED, CGRID_STRUCTURED)
+MESH_TYPE = CGRID_UNSTRUCTURED
+%
 % Dimension of the airfoil connector
 AIRFOIL_DIM = 1600
 %
@@ -61,9 +61,6 @@ TE_SPACING = 0.01
 % Size Field Decay (between 0 and 1) for unstructured grid
 SIZE_FIELD_DECAY = 0.99
 %
-% Mesh type (UNSTRUCTURED, STRUCTURED)
-MESH_TYPE = UNSTRUCTURED
-%
 % Algorithm for unstructured (DELAUNAY, ADVANCING_FRONT, ADVANCING_FRONT_ORTHO)
 ALGORITHM = DELAUNAY
 %
@@ -72,3 +69,49 @@ SOLVER = SU2
 %
 % Dimension
 DIMENSION = 2
+%
+%----------------------- NEURAL NETWORK CONFIGURATION --------------------------%
+%
+% Number of epoch(s)
+N_EPOCH = 1000
+% 
+% Number of neurons in the hidden layer
+N_NEURON = 100
+%
+% Learning rate (for zdt1,zdt2, zdt3 and osy it's 2E-5)
+LEARNING_RATE = 2E-5
+%
+% Batch rate
+BATCHRATE = 5
+%
+% Number of updates (initial training is not counted)
+NO_OF_UPDATES = 5
+%
+% The ratio of training data to all data
+TRAIN_RATIO = 0.8
+%
+%
+%------------- OPTIMIZATION CONFIGURATION ON THE TRAINED NN MODEL -------------%
+%
+% Optimization algorithm (nsga, nsga2, nsga3)
+OPTIMIZATION_ALGORITHM = nsga2
+%
+% Initial sampling (real_lhs, real_random, bin_lhs, bin_random)
+SAMPLING_METHOD = real_lhs
+%
+% Selection operator (random, tournament)
+SELECTION_OPERATOR = tournament
+%
+% Crossover operator (real_sbx, int_sbx, read_de, perm_ox, perm_erx)
+CROSSOVER_OPERATOR = real_sbx
+CROSSOVER_PROBABILITY = 0.9
+ETA_CROSSOVER = 15
+%
+% Mutation operator (none, real_pm, int_pm, bin_bit-flip, perm_inv)
+MUTATION_OPERATOR = real_pm
+ETA_MUTATION = 20
+%
+% Stopping criteria (n_gen|n_iter, n_eval, igd, time, x_tol, f_tol)
+TERMINATION = n_gen
+NUMBER_OF_GENERATION = 250
+%

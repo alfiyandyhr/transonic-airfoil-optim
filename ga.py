@@ -8,15 +8,13 @@ import numpy as np
 from pymoo.model.problem import Problem
 from pymoo.model.population import Population, pop_from_array_or_individual
 from pymoo.model.sampling import Sampling
-from pymoo.model.evaluator import Evaluator
 from pymoo.algorithms.nsga2 import NSGA2, RankAndCrowdingSurvival
 from pymoo.optimize import minimize
-from pymoo.factory import get_problem, get_sampling, get_selection
+from pymoo.factory import get_sampling, get_selection
 from pymoo.factory import get_crossover, get_mutation, get_termination
 
-from eval import evaluate_aero,evaluate_area,evaluate_y_diff
-# from Mesh import *
 from NeuralNet import calculate
+from eval import evaluate_cheap_G_from_array
 #####################################################################################################
 #Disable warning
 from pymoo.configuration import Configuration
@@ -40,17 +38,41 @@ class TransonicAirfoilOptimization(Problem):
 						 n_obj=self.n_obj,
 						 n_constr=self.n_constr,
 						 xl=self.xl, xu=self.xu)
-
 	# def _evaluate(self, X, out, *args, **kwargs):
-	# 	"""Evaluation method"""
+	# see eval.py
+
+class TrainedModelProblem(Problem):
+	"""This is the trained neural net model"""
+	def __init__(self, problem, device):
+		"""Inheritance from Problem class"""
+		self.n_var = problem.n_var
+		self.n_obj = problem.n_obj
+		self.n_constr = problem.n_constr
+		self.xl = problem.xl
+		self.xu = problem.xu
+		self.problem = problem
+		self.device = device
 		
-	# 	F = OUT[:, 0:self.n_obj]
-	# 	G = OUT[:, self.n_obj:(self.n_obj+self.n_constr)]
-
-	# 	out["F"] = np.column_stack([F])
-	# 	out["G"] = np.column_stack([G])
-
+		super().__init__(n_var=self.n_var,
+						 n_obj=self.n_obj,
+						 n_constr=self.n_constr,
+						 xl=self.xl, xu=self.xu)
 	
+	def _evaluate(self, X, out, *args, **kwargs):
+		"""Evaluation method"""
+		OUT = calculate(X=X, problem=self.problem,
+						device=self.device)
+
+		F = OUT[:, 0:self.n_obj]
+		G = OUT[:, self.n_obj]
+
+		cheap_G = evaluate_cheap_G_from_array(X)
+
+		G = np.concatenate((G,cheap_G),axis=1)
+
+		out["F"] = np.column_stack([F])
+		out["G"] = np.column_stack([G])
+
 class EvolutionaryAlgorithm():
 	"""Instance for the crossover operator"""
 	def __init__(self, name):

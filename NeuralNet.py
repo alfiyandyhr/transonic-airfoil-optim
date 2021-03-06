@@ -52,9 +52,9 @@ def train(problem,
 	"""
 
 	#Loading training data
-	X = np.genfromtxt('DATA/training/X.dat',
+	X = np.genfromtxt('Data/Training/X.dat',
 		skip_header=0, skip_footer=0, delimiter=' ')
-	OUT = np.genfromtxt('DATA/training/OUT.dat',
+	OUT = np.genfromtxt('Data/Training/OUT.dat',
 		skip_header=0, skip_footer=0, delimiter=' ')
 
 	print('Processing the data... please wait :)\n')
@@ -196,14 +196,14 @@ def calculate(X, problem, device):
 	X = normalize(X, v_max, v_min, axis=0)
 
 	#Loading the model
-	model = torch.load('DATA/prediction/trained_model.pth').to(device)
+	model = torch.load('Data/Prediction/trained_model.pth').to(device)
 
 	#Trained model produces output
 	OUT = model(X.float())
 	OUT = OUT.cpu()
 
 	#Denormalization of output
-	out = np.genfromtxt('DATA/training/OUT.dat',
+	out = np.genfromtxt('Data/Training/OUT.dat',
 	skip_header=0, skip_footer=0, delimiter=' ')
 
 	out = torch.from_numpy(out)
@@ -214,6 +214,3 @@ def calculate(X, problem, device):
 	OUT = denormalize(OUT, OUT_max, OUT_min, axis=1)
 
 	return OUT.detach().numpy()
-
-
-
