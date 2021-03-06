@@ -32,7 +32,10 @@ class AirfoilMesh():
 		self.te_spacing = te_spacing
 		self.solver = solver
 		self.dim = dim
-		self.mesh_type = mesh_type
+		if mesh_type in ['OGRID_STRUCTURED','CGRID_STRUCTURED']:
+			self.mesh_type = 'STRUCTURED'
+		elif mesh_type == 'OGRID_UNSTRUCTURED':
+			self.mesh_type = 'UNSTRUCTURED'
 
 		self.curves = []
 		self.connectors = []
@@ -131,24 +134,6 @@ class AirfoilMesh():
 				con.getDistribution(1).setEndSpacing(spacing)
 			modifier.end()
 		pw.Application.markUndoLevel('Change Spacing')
-
-	def set_bc(self):
-		"""Setting the boundary conditions"""
-		connector_1 = pw.GridEntity.getByName('con-1')
-		dom_1 = pw.GridEntity.getByName('dom-1')
-		connector_2 = pw.GridEntity.getByName('con-2')
-		connector_3 = pw.GridEntity.getByName('con-3')
-		connector_4 = pw.GridEntity.getByName('con-4')
-
-		bc_airfoil = pw.BoundaryCondition.create()
-		bc_airfoil.setName('airfoil')
-		airfoil_doms = [[dom_1, connector_1],[dom_1, connector_2]]
-		bc_airfoil.apply(airfoil_doms)
-
-		bc_farfield = pw.BoundaryCondition.create()
-		bc_farfield.setName('farfield')
-		farfield_doms = [[dom_1,connector_4]]
-		bc_farfield.apply(farfield_doms)
 
 	def pw_export(self,domains):
 		"""Exporting mesh files, e.g. SU2 mesh"""
@@ -251,7 +236,7 @@ class AirfoilMesh():
 		#Export the mesh files
 		self.pw_export([dom1, dom2, dom3])
 
-	def structured(self, growth_factor=1.2, initial_stepsize=0.001, step=100):
+	def ogrid_structured(self, growth_factor=1.2, initial_stepsize=0.001, step=100):
 		"""Completing the routines for structured mesh"""
 		self.pw_reset()
 		self.modify_tolerances()
@@ -278,12 +263,26 @@ class AirfoilMesh():
 		pw.Application.markUndoLevel('Extrude normal')
 
 		#Set the boundary conditions
-		self.set_bc()
+		connector_1 = pw.GridEntity.getByName('con-1')
+		dom_1 = pw.GridEntity.getByName('dom-1')
+		connector_2 = pw.GridEntity.getByName('con-2')
+		connector_3 = pw.GridEntity.getByName('con-3')
+		connector_4 = pw.GridEntity.getByName('con-4')
+
+		bc_airfoil = pw.BoundaryCondition.create()
+		bc_airfoil.setName('airfoil')
+		airfoil_doms = [[dom_1, connector_1],[dom_1, connector_2]]
+		bc_airfoil.apply(airfoil_doms)
+
+		bc_farfield = pw.BoundaryCondition.create()
+		bc_farfield.setName('farfield')
+		farfield_doms = [[dom_1,connector_4]]
+		bc_farfield.apply(farfield_doms)
 
 		#Export the mesh files
 		self.pw_export()
 
-	def unstructured(self, algorithm,
+	def ogrid_unstructured(self, algorithm,
 					 size_field_decay,
 					 farfield_radius,
 					 farfield_dim,):

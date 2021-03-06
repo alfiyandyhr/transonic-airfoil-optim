@@ -4,6 +4,7 @@ from su2 import su2_cfd
 from pymoo.model.evaluator import Evaluator
 
 import numpy as np
+import pandas as pd
 
 def evaluate_aero(gen, mesh, CFD_eval):
 	"""
@@ -25,11 +26,23 @@ def evaluate_aero(gen, mesh, CFD_eval):
 				solver=solver,
 				dim=dimension,
 				mesh_type=mesh_type)
-			airfoil_mesh_random.cgrid_structured(
-				farfield_radius,
-				step_dim,
-				first_spacing)
-
+			if mesh_type == 'OGRID_UNSTRUCTURED':
+				airfoil_mesh_random.ogrid_structured(
+					growth_factor=1.2,
+					initial_stepsize=0.001,
+					step=100)
+			elif mesh_type == 'CGRID_STRUCTURED':
+				airfoil_mesh_random.cgrid_structured(
+					farfield_radius,
+					step_dim,
+					first_spacing)
+			elif mesh_type == 'OGRID_UNSTRUCTURED':
+				airfoil_mesh_random.ogrid_unstructured(
+					algorithm,
+					size_field_decay,
+					farfield_radius,
+					farfield_dim)
+				
 	#CFD evaluations
 	if CFD_eval:	
 		for i in range(pop_size):
@@ -87,6 +100,7 @@ def evaluate(gen, pop, mesh, CFD_eval):
 	This function will do the true evaluation and return the array
 	which contains F, G and CV
 	Input:
+		gen = generation
 		problem = problem object in pymoo
 		pop = population object in pymoo
 	Output:
@@ -96,6 +110,13 @@ def evaluate(gen, pop, mesh, CFD_eval):
 	if mesh or CFD_eval:
 		evaluate_aero(gen, mesh, CFD_eval)
 
+	pop_eval = np.zeros((pop_size,3)) #for objective functions
+	for i in range(pop_size):
+		data = pd.read_csv('Solutions/gen_1/random_design'+str(i)+'/history.csv',
+			header=0, usecols=['       "CD"       ','       "CL"       ','       "CMz"      '])
+		interest = np.array([data.iloc[len(data)-1]])
+		pop_eval[i] = interest 
+
 	#--------------------- Area evaluation (cheap) ----------------------#
 	airfoil_area = []
 	for i in range(pop_size):
@@ -104,7 +125,7 @@ def evaluate(gen, pop, mesh, CFD_eval):
 		airfoil_area.append(evaluate_area(random_design))
 	airfoil_area = np.array(airfoil_area).reshape(pop_size,1)
 
-	pop_eval = -(airfoil_area - 0.8*ref_area)
+	pop_eval = np.concatenate((pop_eval,-(airfoil_area - 0.8*ref_area)),axis=1)
 
 	#----------------- T.E. and L.E. constraints (cheap) ----------------#
 	y_diffs = np.zeros((pop_size,4))
@@ -116,18 +137,43 @@ def evaluate(gen, pop, mesh, CFD_eval):
 
 	pop_eval = np.concatenate((pop_eval,y_diffs),axis=1)
 
+	# pop.set('F',pop_eval[:,0:2],'G',pop_eval[:,2:8])
 
-	pop.set('G',pop_eval)
 	# pop_eval = pop.get('F')
 	# pop_G = pop.get('G')
 	# pop_CV = pop.get('CV')
 
-
-	# if pop_G[0] is not None:
-	# 	pop_eval = np.concatenate((pop_eval, pop_G, pop_CV), axis=1)
-	# else:
-	# 	pop_G = np.zeros((len(pop_eval),1))
-	# 	pop_eval = np.concatenate((pop_eval, pop_G, pop_CV), axis=1)
-
-	# return pop_eval
 	return pop_eval
+
+def evaluate_cheap_G_from_array(X):
+	"""
+	This function will do the true evaluation and return the array
+	which contains cheap G
+	Input:
+		X = design variables
+	Output:
+		pop_eval_cheap_G = array of cheap G (area and y_diffs)
+	"""
+	zero = np.zeros((len(X),1))
+
+	y = np.concatenate((zero, X[:,0:int(n_var/2)], zero, X[:,int(n_var/2):n_var], zero),axis=1)
+	x = control_x
+
+	#--------------------- Area evaluation (cheap) ----------------------#
+	airfoil_area = []
+	for indiv in range(pop_size):
+		random_design = np.concatenate((x,y[indiv].reshape((n_var+3,1))),axis=1)
+		airfoil_area.append(evaluate_area(random_design))
+	airfoil_area = np.array(airfoil_area).reshape(pop_size,1)
+
+	pop_eval_cheap_G = -(airfoil_area - 0.8*ref_area)
+
+	#----------------- T.E. and L.E. constraints (cheap) ----------------#
+	y_diffs = np.zeros((pop_size,4))
+	for indiv in range(pop_size):
+		y_diff = evaluate_y_diff(y[indiv]).reshape(-1)
+		y_diffs[indiv,:] = -y_diff
+
+	pop_eval_cheap_G = np.concatenate((pop_eval_cheap_G,y_diffs),axis=1)
+
+	return pop_eval_cheap_G
