@@ -64,7 +64,7 @@ class TrainedModelProblem(Problem):
 						device=self.device)
 
 		F = OUT[:, 0:self.n_obj]
-		G = OUT[:, self.n_obj]
+		G = OUT[:, self.n_obj].reshape((len(X),1))
 
 		cheap_G = evaluate_cheap_G_from_array(X)
 
@@ -141,19 +141,23 @@ def do_survival(problem, merged_pop, n_survive):
 	surviving_pop_eval = surviving_pop.get('F')
 	surviving_pop_G = surviving_pop.get('G')
 	surviving_pop_CV = surviving_pop.get('CV')
-
-	if surviving_pop_G[0] is not None:
-		surviving_pop_eval = np.concatenate((surviving_pop_eval, surviving_pop_G, surviving_pop_CV), axis=1)
-	else:
-		surviving_pop_G = np.zeros((len(surviving_pop_eval),1))
-		surviving_pop_eval = np.concatenate((surviving_pop_eval, surviving_pop_G, surviving_pop_CV), axis=1)
+	# print(surviving_pop_eval)
+	# print(surviving_pop_G)
+	# print(surviving_pop_CV)
+	surviving_pop_eval = np.concatenate((surviving_pop_eval, surviving_pop_G, surviving_pop_CV), axis=1)
 
 	return surviving_pop, surviving_pop_eval
 
 def do_optimization(problem, algorithm, termination,
-	verbose=False, seed=1, return_least_infeasible=True):
+	gen, verbose=False, seed=1,
+	return_least_infeasible=True, optimize=True):
 	"""Conduct optimization process and return optimized solutions"""
-	optim = minimize(problem, algorithm, termination,
-					 verbose=verbose, seed=seed,
-					 return_least_infeasible=return_least_infeasible)
+	if optimize:
+		optim = minimize(problem, algorithm, termination,
+						 verbose=verbose, seed=seed,
+						 return_least_infeasible=return_least_infeasible)
+		#Save next generation
+		np.savetxt('Designs/gen_' + str(gen) + '/dv_' + str(gen) + '.dat',optim.X)
+	else:
+		optim = None
 	return optim

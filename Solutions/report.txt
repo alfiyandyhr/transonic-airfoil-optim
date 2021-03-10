@@ -1,0 +1,26 @@
+If the solutions do not converge, we use unstructured mesh.
+
+List of solutions that do not converge if we use c-grid structured:
+> Gen 1:
+		- Sol 81
+> Gen 2:
+		- Sol 5
+		- Sol 15
+		- Sol 19
+		- Sol 20
+		- Sol 28
+		- Sol 38
+		- Sol 40
+		- Sol 44
+		- Sol 57
+		- Sol 79
+		- Sol 85
+		- Sol 88
+		- Sol 94
+		- Sol 96
+
+> Gen 3: (2 hours 33 mins)
+		-
+
+> Gen 4:
+		- 

@@ -14,20 +14,21 @@ pw = glf.get_glyphapi()
 class AirfoilMesh():
 	"""An airfoil object that can do the mesh process"""
 	def __init__(self, file_in, file_out,
-				 con_dimension,
+				 airfoil_con_dim,
 				 le_spacing, te_spacing,
 				 solver, dim,
 				 mesh_type):
 
 		"""It contains parameters to be used"""
-		# file_in = 'D:/my_project/transonic-airfoil-optim/Designs/gen_' + file_in
-		# file_out = 'D:/my_project/transonic-airfoil-optim/Solutions/gen_' + file_out
-		file_in = 'D:/my_project/transonic-airfoil-optim/Designs/baseline/' + file_in
-		file_out = 'D:/my_project/transonic-airfoil-optim/Grid_Convergence_Study/baseline/ogrid-euler/' + file_out
+		file_in = 'D:/my_project/transonic-airfoil-optim/Designs/gen_' + file_in
+		file_out = 'D:/my_project/transonic-airfoil-optim/Solutions/gen_' + file_out
+		# file_in = 'D:/my_project/transonic-airfoil-optim/Designs/baseline/' + file_in
+		# file_out = 'D:/my_project/transonic-airfoil-optim/Solutions/baseline/' + file_out
+		# file_out = 'D:/my_project/transonic-airfoil-optim/Grid_Convergence_Study/baseline/cgrid-euler/' + file_out
 
 		self.file_in = file_in
 		self.file_out = file_out
-		self.con_dimension = con_dimension
+		self.airfoil_con_dim = airfoil_con_dim
 		self.le_spacing = le_spacing
 		self.te_spacing = te_spacing
 		self.solver = solver
@@ -71,7 +72,7 @@ class AirfoilMesh():
 	def create_airfoil_connectors(self):
 		"""Creating connectors"""
 		pw.Connector.setCalculateDimensionMaximum(2000)
-		pw.Connector.setDefault('Dimension',self.con_dimension)
+		pw.Connector.setDefault('Dimension',int(self.airfoil_con_dim/2))
 		self.curves = pw.Database.getAll()
 		self.connectors = pw.Connector.createOnDatabase(self.curves,
 			parametricConnectors='Aligned', merge=0,
@@ -89,13 +90,16 @@ class AirfoilMesh():
 			con.addSegment(seg1)
 			creator.end()
 
-	def create_connector_circle(self,point1,point2,angle):
+	def create_connector_circle(self,point1,point2,angle,type):
 		"""Create a circle connector by two points and an angle"""
 		with pw.Application.begin('Create') as creator:
 			seg1 = pw.SegmentCircle()
 			seg1.addPoint(point1)
 			seg1.addPoint(point2)
-			seg1.setAngle(angle)
+			if type == '2PointsAndAngle':
+				seg1.setAngle(angle)
+			elif type == 'PointCenterAndAngle':
+				seg1.setEndAngle(angle)
 
 			con = pw.Connector()
 			con.addSegment(seg1)
@@ -150,7 +154,6 @@ class AirfoilMesh():
 	def cgrid_structured(self,farfield_radius,step_dim,first_spacing):
 		"""Completing the routines for c-grid topology structured mesh"""
 		self.pw_reset()
-		self.pw_reset()
 		self.modify_tolerances()
 		self.set_CAE_solver()
 		self.pw_import()
@@ -177,8 +180,8 @@ class AirfoilMesh():
 		self.change_connector_spacing('con-8',self.te_spacing,'begin')
 		self.change_connector_spacing('con-9',self.te_spacing,'begin')
 
-		pw.Connector.setDefault('Dimension',2*self.con_dimension-1)
-		self.create_connector_circle([1,farfield_radius,0],[1,-farfield_radius,0],180)
+		pw.Connector.setDefault('Dimension',self.airfoil_con_dim-1)
+		self.create_connector_circle([1,farfield_radius,0],[1,-farfield_radius,0],180,type='2PointsAndAngle')
 		self.change_connector_spacing('con-10',self.te_spacing,'begin_and_end')
 
 		#Get grid entity
@@ -236,51 +239,67 @@ class AirfoilMesh():
 		#Export the mesh files
 		self.pw_export([dom1, dom2, dom3])
 
-	def ogrid_structured(self, growth_factor=1.2, initial_stepsize=0.001, step=100):
+	def ogrid_structured(self,farfield_radius,step_dim,first_spacing):
 		"""Completing the routines for structured mesh"""
 		self.pw_reset()
 		self.modify_tolerances()
 		self.set_CAE_solver()
 		self.pw_import()
 		self.create_airfoil_connectors()
-		#self.modify_connectors()
 		self.change_airfoil_spacing()
 
-		#Extrude normal
+		pw.Connector.setDefault('Dimension',self.airfoil_con_dim)
+		pw.Connector.setDefault('BeginSpacing',first_spacing)
+		self.create_connector_spline([1,0,0],[farfield_radius,0,0])
+
+		pw.Connector.setDefault('Dimension',self.airfoil_con_dim-1)
+		pw.Connector.setDefault('BeginSpacing',0.0)
+		self.create_connector_circle([farfield_radius,0,0],[1,0,0],360,type='PointCenterAndAngle')
+
+		#Get grid entity
+		con1 = pw.GridEntity.getByName('con-1')
+		con2 = pw.GridEntity.getByName('con-2')
+		con3 = pw.GridEntity.getByName('con-3')
+		con4 = pw.GridEntity.getByName('con-4')
+
+		#Create domains
 		with pw.Application.begin('Create') as creator:
-			inner_edge = pw.Edge.createFromConnectors(self.connectors)
+			edge_1 = pw.Edge.create()
+			edge_1.addConnector(con3)
+			edge_2 = pw.Edge.create()
+			edge_2.addConnector(con4)
+			edge_3 = pw.Edge.create()
+			edge_3.addConnector(con3)
+			edge_4 = pw.Edge.create()
+			edge_4.addConnector(con2)
+			edge_4.addConnector(con1)
+
+			#for baseline (switch!)
+			# edge_4.addConnector(con2)
+			# edge_4.addConnector(con1)
+
 			dom = pw.DomainStructured.create()
-			dom.addEdge(inner_edge)
+			dom.addEdge(edge_1)
+			dom.addEdge(edge_2)
+			dom.addEdge(edge_3)
+			dom.addEdge(edge_4)
 			creator.end()
 
-		with pw.Application.begin('ExtrusionSolver',dom) as ExtrusionSolver:
-			ExtrusionSolver.setKeepFailingStep(True)
-			dom.setExtrusionSolverAttribute('SpacingGrowthFactor',growth_factor)
-			dom.setExtrusionSolverAttribute('NormalInitialStepSize',initial_stepsize)
-			ExtrusionSolver.run(step)
-			ExtrusionSolver.end()
-
-		pw.Application.markUndoLevel('Extrude normal')
-
 		#Set the boundary conditions
-		connector_1 = pw.GridEntity.getByName('con-1')
 		dom_1 = pw.GridEntity.getByName('dom-1')
-		connector_2 = pw.GridEntity.getByName('con-2')
-		connector_3 = pw.GridEntity.getByName('con-3')
-		connector_4 = pw.GridEntity.getByName('con-4')
 
 		bc_airfoil = pw.BoundaryCondition.create()
 		bc_airfoil.setName('airfoil')
-		airfoil_doms = [[dom_1, connector_1],[dom_1, connector_2]]
+		airfoil_doms = [[dom_1, con1],[dom_1, con2]]
 		bc_airfoil.apply(airfoil_doms)
 
 		bc_farfield = pw.BoundaryCondition.create()
 		bc_farfield.setName('farfield')
-		farfield_doms = [[dom_1,connector_4]]
+		farfield_doms = [[dom_1,con4]]
 		bc_farfield.apply(farfield_doms)
-
-		#Export the mesh files
-		self.pw_export()
+		
+		#Exporting the mesh files
+		self.pw_export([dom_1])
 
 	def ogrid_unstructured(self, algorithm,
 					 size_field_decay,

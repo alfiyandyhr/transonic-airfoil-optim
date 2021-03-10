@@ -1,10 +1,10 @@
 #Coded by Alfiyandy Hariansyah
 #Tohoku University
-#3/6/2021
+#3/10/2021
 #####################################################################################################
 from LoadVars import *
 from BSpline import * 
-# from Mesh import *
+from Mesh import *
 from ga import *
 from pymoo.model.population import pop_from_array_or_individual
 from NeuralNet import NeuralNet, train, calculate
@@ -31,16 +31,17 @@ device = torch.device('cpu')
 # -------------------- INITIALIZATION --------------------- #
 
 #Initial sampling using LHS with constraint handling
+#uncomment this only once
 # os.system("gcc -o lhs lhs.c")
-# os.system("lhs")
+# os.system("./lhs")
 
 parent_pop = np.genfromtxt('Initial_Sampling/dv_lhs.dat')
 y = np.copy(parent_pop)
 zero = np.zeros((len(y),1))
 
-y = np.concatenate((zero, y[:,0:int(n_var/2)], zero, y[:,int(n_var/2):n_var], zero),axis=1)
 x = control_x
 z = np.zeros((len(x),1))
+y = np.concatenate((zero, y[:,0:int(n_var/2)], zero, y[:,int(n_var/2):n_var], zero),axis=1)
 
 for indiv in range(pop_size):
 	save('Designs/gen_1/control_points/random_design' + str(indiv) + '.dat',
@@ -69,7 +70,10 @@ problem = TransonicAirfoilOptimization(n_var,
 parent_pop = pop_from_array_or_individual(parent_pop)
 
 #Evaluating initial samples (true eval)
-parent_pop_eval = evaluate(gen=1, pop=parent_pop, mesh=False, CFD_eval=False)
+parent_pop_eval = evaluate(
+				  gen=1, pop=parent_pop,
+				  mesh=False, CFD=False,
+				  done=[-1], diverge=[-1])
 
 save('Output/initial_pop_X.dat', parent_pop.get('X'), header='Generation 1: X')
 save('Output/initial_pop_FGCV.dat', parent_pop_eval, header='Generation 1: F, G, CV')
@@ -80,7 +84,7 @@ save('Data/Training/OUT.dat', parent_pop_eval[:, 0:n_obj+1])
 
 #Initial performance
 HV = [0.0]
-HV += [calc_hv(parent_pop_eval[:,range(n_obj)], ref=[1.0,1.0])]
+HV += [calc_hv(parent_pop_eval[:,range(n_obj)], ref=[2.0,2.0])]
 
 ###################################################################################################
 
@@ -94,13 +98,14 @@ Model = NeuralNet(D_in=n_var,
 
 print('Performing initial training...\n')
 
-# train(problem=problem,
-# 	  model=Model,
-#       N_Epoch=N_Epoch,
-#       lr=lr,
-#       train_ratio=train_ratio,
-#       batchrate=batchrate,
-#       device=device)
+train(problem=problem,
+	  model=Model,
+      N_Epoch=N_Epoch,
+      lr=lr,
+      train_ratio=train_ratio,
+      batchrate=batchrate,
+      device=device,
+      do_training=False)
 
 print('\nAn initial trained model is obtained!\n')
 print('--------------------------------------------------')
@@ -118,7 +123,7 @@ Survival = RankAndCrowdingSurvival()
 
 #EA settings
 EA = EvolutionaryAlgorithm(algorithm_name)
-algorithm = EA.setup(pop_size=pop_size-1,
+algorithm = EA.setup(pop_size=pop_size,
 					 sampling=initial_sampling,
 					 # selection=selection,
 					 crossover=crossover,
@@ -130,10 +135,11 @@ stopping_criteria = stopping_criteria_def.set_termination(n_gen=n_gen)
 
 #Obtaining optimal solutions on the initial trained model
 print(f'Performing optimization on the initial trained model using {algorithm_name.upper()}\n')
-# res =  do_optimization(TrainedModel_Problem,
-# 					   algorithm, stopping_criteria,
-# 					   verbose=True, seed=1,
-# 					   return_least_infeasible=False)
+res =  do_optimization(TrainedModel_Problem,
+					   algorithm, stopping_criteria,
+					   gen=2, verbose=True, seed=1,
+					   return_least_infeasible=False,
+					   optimize=False)
 print('--------------------------------------------------')
 print('\nOptimal solutions on the initial trained model is obtained!\n')
 print('--------------------------------------------------')
@@ -145,15 +151,41 @@ print('--------------------------------------------------')
 for update in range(number_of_updates):
 	#Saving best design variables (X_best) on every trained model
 	print(f'Updating the training data to the neural net, update={update+1}\n\n')
+
+	#Create control points and its bspline points
+	child_pop = np.genfromtxt('Designs/gen_' + str(update+2) + '/dv_' + str(update+2) + '.dat')
+	y = np.copy(child_pop)
+	y = np.concatenate((zero, y[:,0:int(n_var/2)], zero, y[:,int(n_var/2):n_var], zero),axis=1)
+	for indiv in range(pop_size):
+		save('Designs/gen_' + str(update+2) + '/control_points/random_design' + str(indiv) + '.dat',
+			 np.concatenate((x,y[indiv].reshape((n_var+3,1)),z),axis=1))
+	for i in range(pop_size):
+		bspline.create(ctrlpts_path='Designs/gen_'+str(update+2)+'/control_points/random_design'+str(i)+'.dat')
+		bspline.rotate_and_dilate(output_path='Designs/gen_'+str(update+2)+'/bspline_points/bspline_points_random'+str(i)+'.dat')
+		bspline.to_pointwise_format(file_path='Designs/gen_'+str(update+2)+'/bspline_points/bspline_points_random'+str(i)+'.dat')
+
 	with open('Data/Prediction/X_best.dat','a') as f:
-		save(f, res.X, header=f'Generation {update+2}: X') 
+		save(f, child_pop, header=f'Generation {update+2}: X') 
 	
 	with open('Data/Training/X.dat','a') as f:
-		save(f, res.X)
+		save(f, child_pop)
 	
+	# ----- Do evaluation, training, and optimization ----- #
+	if update == 2:
+		mesh 		= True
+		CFD 		= False
+		do_training = False
+		optimize 	= False
+	else:
+		mesh  		= False
+		CFD			= False
+		do_training = False
+		optimize 	= False
+
 	#Evaluating X_best (true eval)
-	child_pop = pop_from_array_or_individual(res.X)
-	child_pop_eval = evaluate(gen=update+1, pop=child_pop, mesh=False, CFD_eval=False)
+	child_pop = pop_from_array_or_individual(child_pop)
+	child_pop_eval = evaluate(gen=update+2, pop=child_pop, mesh=mesh, CFD=CFD,
+							  done = [-1], diverge=[-1])
 
 	with open('Data/Training/OUT.dat', 'a') as f:
 		save(f, child_pop_eval[:, 0:n_obj+1]) 
@@ -162,7 +194,7 @@ for update in range(number_of_updates):
 	merged_pop = Population.merge(parent_pop, child_pop)
 
 	#Survival method depending on the algorithm type
-	parent_pop, parent_pop_eval = do_survival(problem, merged_pop, n_survive=pop_size-1)
+	parent_pop, parent_pop_eval = do_survival(problem, merged_pop, n_survive=pop_size)
 
 	with open('Output/all_pop_X.dat', 'a') as f:
 		save(f, parent_pop.get('X'), header=f'Generation {update+2}: X')
@@ -171,7 +203,7 @@ for update in range(number_of_updates):
 		save(f, parent_pop_eval, header=f'Generation {update+2}: F, G, CV')
 
 	#Performance measurement for each iteration
-	HV  += [calc_hv(parent_pop.get('F')[:,range(n_obj)], ref=[1.0,1.0])]
+	HV  += [calc_hv(parent_pop.get('F')[:,range(n_obj)], ref=[2.0,2.0])]
 
 	#Training neural nets
 	print(f'Performing neural nets training, training={update+2}\n')
@@ -184,55 +216,57 @@ for update in range(number_of_updates):
 		  lr=lr,
 		  train_ratio=train_ratio,
 		  batchrate=batchrate,
-		  device=device)
+		  device=device,
+		  do_training=do_training)
 
 	#Optimal solutions
 	print('--------------------------------------------------\n')
 	print(f'Performing optimization on the trained model using {algorithm_name.upper()}\n')
 	res =  do_optimization(TrainedModel_Problem,
 						   algorithm, stopping_criteria,
-						   verbose=True, seed=1,
-						   return_least_infeasible=True)
+						   gen=update+3, verbose=True, seed=1,
+						   return_least_infeasible=True,
+						   optimize=optimize)
 	print('--------------------------------------------------\n')
 	print('Optimal solutions on the trained model is obtained!\n')
 	print('--------------------------------------------------\n\n')
 
 ###################################################################################################
 
-# -------------------- FINALIZATION --------------------- #
+# # -------------------- FINALIZATION --------------------- #
 
-#Evaluating the last X_best (true eval)
-child_pop = pop_from_array_or_individual(res.X)
-child_pop_eval = evaluate(gen=number_of_updates+2, pop=child_pop, mesh=False, CFD_eval=False)
+# #Evaluating the last X_best (true eval)
+# child_pop = pop_from_array_or_individual(res.X)
+# child_pop_eval = evaluate(gen=number_of_updates+2, pop=child_pop, mesh=False, CFD=False)
 
-#Merging parent_pop and child_pop
-merged_pop = Population.merge(parent_pop, child_pop)
+# #Merging parent_pop and child_pop
+# merged_pop = Population.merge(parent_pop, child_pop)
 
-#Survival method depending on the algorithm type
-parent_pop, parent_pop_eval = do_survival(problem, merged_pop, n_survive=pop_size-1)
+# #Survival method depending on the algorithm type
+# parent_pop, parent_pop_eval = do_survival(problem, merged_pop, n_survive=pop_size)
 
-save('Output/final_pop_X.dat', parent_pop.get('X'), header=f'Generation {number_of_updates+2}: X')
-save('Output/final_pop_FGCV.dat', parent_pop_eval, header=f'Generation {number_of_updates+2}: F, G, CV')
-with open('Output/all_pop_X.dat', 'a') as f:
-	save(f, parent_pop.get('X'), header=f'Generation {number_of_updates+2}: X')
-with open('Output/all_pop_FGCV.dat', 'a') as f:
-	save(f, parent_pop_eval, header=f'Generation {number_of_updates+2}: F, G, CV') 
+# save('Output/final_pop_X.dat', parent_pop.get('X'), header=f'Generation {number_of_updates+2}: X')
+# save('Output/final_pop_FGCV.dat', parent_pop_eval, header=f'Generation {number_of_updates+2}: F, G, CV')
+# with open('Output/all_pop_X.dat', 'a') as f:
+# 	save(f, parent_pop.get('X'), header=f'Generation {number_of_updates+2}: X')
+# with open('Output/all_pop_FGCV.dat', 'a') as f:
+# 	save(f, parent_pop_eval, header=f'Generation {number_of_updates+2}: F, G, CV') 
 
-#Performance measurement for the last solutions
-HV  += [calc_hv(parent_pop_eval[:,range(n_obj)], ref=[1.0,1.0])]
+# #Performance measurement for the last solutions
+# HV  += [calc_hv(parent_pop_eval[:,range(n_obj)], ref=[1.0,1.0])]
 
-#True evaluation counters
-true_eval = [0]
-for update in range(number_of_updates+2):
-	true_eval += [(pop_size-1)*(update+1)+1]
+# #True evaluation counters
+# true_eval = [0]
+# for update in range(number_of_updates+2):
+# 	true_eval += [(pop_size)*(update+1)+1]
 
-true_eval = np.array([true_eval]).T
-HV = np.array([HV]).T
-HV = np.concatenate((HV, true_eval),axis=1)
+# true_eval = np.array([true_eval]).T
+# HV = np.array([HV]).T
+# HV = np.concatenate((HV, true_eval),axis=1)
 
-save('Output/HV.dat', HV, header='HV History: HV value, true eval counters')
+# save('Output/HV.dat', HV, header='HV History: HV value, true eval counters')
 
-print(f'NN based surrogate optimization is DONE! True eval = {(pop_size-1)*(number_of_updates+2)+1}\n')
+# print(f'NN based surrogate optimization is DONE! True eval = {(pop_size)*(number_of_updates+2)+1}\n')
 
 ###################################################################################################
 
@@ -240,52 +274,34 @@ print(f'NN based surrogate optimization is DONE! True eval = {(pop_size-1)*(numb
 
 # #Prepare the folders to save mesh files
 # for i in range(pop_size):
-# 	os.makedirs('Solutions/gen_1/random_design' + str(i))
+# 	os.makedirs('Solutions/gen_7/random_design' + str(i))
 
 # #Prepare the SU2 config files for every mesh folders
 # with open('Solutions/baseline/inv_transonic_airfoil.cfg', 'r') as f:
 # 	su2_cfg = f.read()
 # for i in range(pop_size):
-# 	with open('Solutions/gen_1/random_design' + str(i) + '/inv_transonic_airfoil.cfg', 'w') as f:
+# 	with open('Solutions/gen_7/random_design' + str(i) + '/inv_transonic_airfoil.cfg', 'w') as f:
 # 		f.write(su2_cfg.replace('rae2282_base.su2','random_design' + str(i) + '.su2'))
 
-#####################################################################################################
-# #Matplotlib
-# plt.plot(design.uiuc_data_upper[:,0], design.uiuc_data_upper[:,1], 'b-', markersize = 3, label='RAE2282 - Baseline')
-# plt.plot(design.uiuc_data_lower[:,0], design.uiuc_data_lower[:,1], 'b-', markersize = 3)
-# plt.errorbar(design.control_upper[:,0], design.control_upper[:,1],yerr=d1,fmt='ro',markersize=3,ecolor='black',capsize=3, label='Control points')
-# plt.errorbar(design.control_lower[:,0], design.control_lower[:,1],yerr=d2,fmt='ro',markersize=3,ecolor='black',capsize=3)
-# plt.plot(design.control_upper[:,0], design.control_upper[:,1], 'bo', markersize = 2)
-# plt.plot(design.control_lower[:,0], design.control_lower[:,1], 'bo', markersize = 2)
-# plt.plot(bspline.bspline_points[:,0],bspline.bspline_points[:,1],'r-',markersize = 3, label='B Spline')
-# plt.plot(design.x_upper, design.y_upper[99], 'ro', markersize = 3, label='Random Control Points')
-# plt.plot(design.x_lower, design.y_lower[99], 'ro', markersize = 3)
-# plt.plot(bspline_points_max[:,0],bspline_points_max[:,1], 'r--', label='Max')
-# plt.plot(bspline_points_min[:,0],bspline_points_min[:,1], 'g--', label='Min')
-# plt.xlim([-0.2, 1.2])
-# plt.xlim([-0.0025, 0.01])
-# plt.xlim([0.8, 1.01])
-# plt.ylim([-0.04, 0.06])
-# plt.ylim([-0.05, 0.05])
-# plt.ylim([-0.2, 0.2])
-# plt.title('Leading edge constraint')
-# plt.xlabel("x")
-# plt.ylabel("y")
-# plt.legend(loc="upper right")
-# plt.show()
 ####################################################################################################
-# #Meshing the baseline
+
+# --------------- GRID CONVERGENCE STUDY ---------------- #
+
+#Meshing the baseline
 # airfoil_mesh_baseline = AirfoilMesh(
 # 	file_in='rae2282_base.dat',
 # 	file_out='rae2282_base.su2',
-# 	con_dimension=con_dimension,
+# 	airfoil_con_dim=airfoil_con_dim,
 # 	le_spacing=le_spacing,
 # 	te_spacing=te_spacing,
 # 	solver=solver,
 # 	dim=dimension,
 # 	mesh_type=mesh_type)
-# #airfoil_mesh_baseline.structured(growth_factor=1.2, initial_stepsize=0.001, step=100)
-# airfoil_mesh_baseline.unstructured(
+# airfoil_mesh_baseline.ogrid_structured(
+# 	farfield_radius,
+# 	step_dim,
+# 	first_spacing)
+# airfoil_mesh_baseline.ogrid_unstructured(
 # 	algorithm,
 # 	size_field_decay,
 # 	farfield_radius,
@@ -295,17 +311,21 @@ print(f'NN based surrogate optimization is DONE! True eval = {(pop_size-1)*(numb
 # 	step_dim,
 # 	first_spacing)
 
-# #Meshing first random design
-# airfoil_mesh_random_design2 = AirfoilMesh(
-# 	file_in='bspline_points_random49.dat',
-# 	file_out='random_design2.su2',
-# 	con_dimension=con_dimension,
+#Meshing a random design
+# airfoil_mesh_random_design = AirfoilMesh(
+# 	file_in='2/bspline_points/bspline_points_random20.dat',
+# 	file_out='2/random_design20-not-converge/random_design20.su2',
+# 	airfoil_con_dim=airfoil_con_dim,
 # 	le_spacing=le_spacing,
 # 	te_spacing=le_spacing,
 # 	solver=solver,
 # 	dim=dimension,
 # 	mesh_type=mesh_type)
-# airfoil_mesh_random_design2.unstructured(
+# airfoil_mesh_random_design.cgrid_structured(
+# 					farfield_radius,
+# 					step_dim,
+# 					first_spacing)
+# airfoil_mesh_random_design.ogrid_unstructured(
 # 	algorithm,
 # 	size_field_decay,
 # 	farfield_radius,
