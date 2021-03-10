@@ -2,7 +2,7 @@
 #Outputting variables as python variables loaded in main.py
 #Coded by Alfiyandy Hariansyah
 #Tohoku University
-#3/5/2021
+#3/8/2021
 #####################################################################################################
 import numpy as np
 from BSpline import BSplineFromControlPoints
@@ -36,7 +36,7 @@ n_constr = eval(config['N_CONSTR'])
 #Mesh
 pw_port = eval(config['PW_PORT'])
 mesh_type = config['MESH_TYPE']
-con_dimension = eval(config['AIRFOIL_DIM'])
+airfoil_con_dim = eval(config['AIRFOIL_CON_DIM'])
 farfield_dim = eval(config['FARFIELD_DIM'])
 farfield_radius = eval(config['FARFIELD_DIST'])
 step_dim = eval(config['STEP_DIM'])
@@ -113,7 +113,9 @@ control_lower = np.genfromtxt('Designs/baseline/rae2282_base_control.dat',
 
 # ref_control = np.concatenate((control_upper, control_lower))
 # ref_area = evaluate_area(ref_control)
-ref_area = 0.0812352023725
+# print(ref_area)
+ref_area = 0.08185958991500002
+ref_CMz = 0.1315928978
 
 control_x = np.genfromtxt('Designs/baseline/rae2282_base_control.dat',usecols=0).reshape((n_var+3,1))
 
@@ -144,3 +146,9 @@ control_x = np.genfromtxt('Designs/baseline/rae2282_base_control.dat',usecols=0)
 
 # bspline_points_max = np.genfromtxt('Designs/baseline/bspline_points_max.dat')
 # bspline_points_min = np.genfromtxt('Designs/baseline/bspline_points_min.dat')
+
+#Plot config for NN surrogate
+all_pop_plot = eval(config['PLOT_ALL_POPULATION'].title())
+best_pop_plot = eval(config['PLOT_BEST_POPULATION'].title())
+initial_pop_plot = eval(config['PLOT_INITIAL_POPULATION'].title())
+hv_plot = eval(config['PLOT_HV_HISTORY'].title())

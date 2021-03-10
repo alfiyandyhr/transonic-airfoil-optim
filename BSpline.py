@@ -60,19 +60,42 @@ class BSplineFromControlPoints():
 
 	def to_pointwise_format(self, file_path):
 		"""Saving files to pointwise format"""
+		data = np.genfromtxt(file_path)
+
+		if data[99,0] > data[100,0]:
+			origin = data[100]
+			idx_origin = 100
+		else:
+			origin = data[99]
+			idx_origin = 99
+
+		data = np.concatenate((data[0:idx_origin],origin.reshape(1,3),data[idx_origin:199]),axis=0)
+
+		#Trailing edge refinement
+		data[0,0] = 1.0
+		data[0,1] = 0.0
+		data[-1,0] = 1.0
+		data[-1,1] = 0.0
+
+		np.savetxt(file_path,data)
+
 		with open(file_path, 'r') as file_in:
-			original_content_upper = file_in.readlines()[0:int(len(self.bspline_points)/2)]
+			original_content_upper = file_in.readlines()[0:idx_origin+1]
 			file_in.seek(0)	#resetting the pointer into 1st line
-			original_content_lower = file_in.readlines()[int(len(self.bspline_points)/2):int(len(self.bspline_points))]
-			original_content_upper[0] = str(1.0) + ' ' + str(0.0) + ' ' + str(0.0) + '\n'
-			original_content_upper[-1] = str(0.0) + ' ' + str(0.0) + ' ' + str(0.0) + '\n'
-			original_content_lower[0] = str(0.0) + ' ' + str(0.0) + ' ' + str(0.0) + '\n'
-			original_content_lower[-1] = str(1.0) + ' ' + str(0.0) + ' ' + str(0.0) + '\n'
+			original_content_lower = file_in.readlines()[idx_origin+1:200]
 		with open(file_path, 'w') as file_out:
 			file_out.seek(0)
-			file_out.write(str(int(len(self.bspline_points)/2)) + '\n')
+			if idx_origin == 100:
+				file_out.write(str(101) + '\n')
+			elif idx_origin == 99:
+				file_out.write(str(100) + '\n')
 			for line1 in original_content_upper:
 				file_out.writelines(line1)
-			file_out.write(str(int(len(self.bspline_points)/2)) + '\n')
+			if idx_origin == 100:
+				file_out.write(str(100) + '\n')
+			elif idx_origin == 99:
+				file_out.write(str(101) + '\n')
 			for line2 in original_content_lower:
 				file_out.writelines(line2)
+		
+

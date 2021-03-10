@@ -1,7 +1,7 @@
 #CFD using SU2 Solver
 #Coded by Alfiyandy Hariansyah
 #Tohoku University
-#2/3/2021
+#3/10/2021
 #####################################################################################################
 import os
 
@@ -20,4 +20,4 @@ def su2_cfd(dir, paralel_comp, core):
 		os.system('SU2_CFD inv_transonic_airfoil.cfg')
 
 	#Return to the parent's directory
-	os.chdir('../../')
+	os.chdir('../../../')

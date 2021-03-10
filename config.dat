@@ -14,12 +14,12 @@
 %-------------------------- DESIGN OF EXPERIMENT ------------------------------%
 %
 % Setting for population
-POPULATION_SIZE = 101
+POPULATION_SIZE = 100
 %
 %----------------------------- PROBLEM DEFINITION -----------------------------%
 %
 % Airfoil parametrization using BSpline
-NUMBER_OF_ACTIVE_CONTROL_POINTS = 26
+NUMBER_OF_ACTIVE_CONTROL_POINTS = 18
 PERTURBATION = 0.02
 %
 % BSpline components
@@ -29,7 +29,7 @@ BSPLINE_DEGREE = 3
 N_OBJ = 2
 %
 % Number of constraints
-N_CONSTR = 6
+N_CONSTR = 4
 %
 %------------------------- MESH CONFIGURATION (POINTWISE) ---------------------%
 %
@@ -37,13 +37,23 @@ N_CONSTR = 6
 PW_PORT = 2807
 %
 % Mesh type (OGRID_STRUCTURED, OGRID_UNSTRUCTURED, CGRID_STRUCTURED)
-MESH_TYPE = CGRID_UNSTRUCTURED
+% for OGRID_STRUCTURED setting:
+%		AIRFOIL_CON_DIM, FARFIELD_DIST, FIRST_SPACING,
+%		STEP_DIM, LE_SPACING, TE_SPACING
+% for CGRID_STRUCTURED setting:
+%		AIRFOIL_CON_DIM, FARFIELD_DIST, FIRST_SPACING,
+%		STEP_DIM, LE_SPACING, TE_SPACING
+% for OGRID_UNSTRUCTURED setting:
+%		AIRFOIL_CON_DIM, FARFIELD_DIM,
+%		FARFIELD_DIST, SIZE_FIELD_DECAY,
+%		LE_SPACING, TE_SPACING, ALGORITHM
+MESH_TYPE = CGRID_STRUCTURED
 %
 % Dimension of the airfoil connector
-AIRFOIL_DIM = 1600
+AIRFOIL_CON_DIM = 338
 %
 % Dimension of the farfield connector (for unstructured)
-FARFIELD_DIM = 100
+FARFIELD_DIM = 60
 %
 % The distance from origin to the farfield
 FARFIELD_DIST = 50
@@ -56,10 +66,10 @@ FIRST_SPACING = 0.001
 %
 % Leading edge and trailing edge spacing
 LE_SPACING = 0.001
-TE_SPACING = 0.01
+TE_SPACING = 0.001
 %
 % Size Field Decay (between 0 and 1) for unstructured grid
-SIZE_FIELD_DECAY = 0.99
+SIZE_FIELD_DECAY = 0.98
 %
 % Algorithm for unstructured (DELAUNAY, ADVANCING_FRONT, ADVANCING_FRONT_ORTHO)
 ALGORITHM = DELAUNAY
@@ -73,19 +83,19 @@ DIMENSION = 2
 %----------------------- NEURAL NETWORK CONFIGURATION --------------------------%
 %
 % Number of epoch(s)
-N_EPOCH = 1000
+N_EPOCH = 2000
 % 
 % Number of neurons in the hidden layer
 N_NEURON = 100
 %
-% Learning rate (for zdt1,zdt2, zdt3 and osy it's 2E-5)
+% Learning rate
 LEARNING_RATE = 2E-5
 %
 % Batch rate
 BATCHRATE = 5
 %
 % Number of updates (initial training is not counted)
-NO_OF_UPDATES = 5
+NO_OF_UPDATES = 3
 %
 % The ratio of training data to all data
 TRAIN_RATIO = 0.8
@@ -115,3 +125,12 @@ ETA_MUTATION = 20
 TERMINATION = n_gen
 NUMBER_OF_GENERATION = 250
 %
+%----------------------- PLOT HISTORY -----------------------%
+%
+% What to plot for objective spaces? (TRUE, FALSE)
+PLOT_BEST_POPULATION = FALSE
+PLOT_INITIAL_POPULATION = FALSE
+PLOT_ALL_POPULATION = FALSE
+%
+% What to plot for performance?
+PLOT_HV_HISTORY = FALSE

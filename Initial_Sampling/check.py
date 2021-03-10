@@ -3,13 +3,13 @@ import numpy as np
 
 x = np.genfromtxt('dv_lhs.dat')
 
-g = np.zeros((len(x),4))
+g = np.zeros((len(x),2))
 nx = len(x[0])
 
 g[:,0] = -(x[:,nx-1] - x[:,0])
 g[:,1] = -(x[:,nx-2] - x[:,1])
-g[:,2] = -(x[:,nx-3] - x[:,2])
-g[:,3] = -(x[:,int(nx/2)] - x[:,int(nx/2)-1])
+# g[:,2] = -(x[:,nx-3] - x[:,2])
+# g[:,3] = -(x[:,int(nx/2)] - x[:,int(nx/2)-1])
 
 print(g)
 
